@@ -11,6 +11,7 @@ extern TFT_eSPI tft;
 class Menu {
 private:
   int id;
+  bool menuWithIcon = false;
   std::string title;
   std::vector<std::string> sections;
   std::vector<char> icons;
@@ -32,7 +33,7 @@ private:
   Menu* parentMenu = nullptr;
 
 public:
-  Menu(double id, const std::string& title, bool isScrollable, int sel, int mov, std::function<void()> aDown = nullptr, std::function<void()> aUp = nullptr);
+  Menu(double id, const std::string& title, bool isScrollable, int sel, int mov, std::function<void()> aDown = nullptr, std::function<void()> aUp = nullptr, bool menuWithIcon = false);
 
   void init();
   void addSection(const std::string& section, char icon, std::function<void()> action = nullptr);

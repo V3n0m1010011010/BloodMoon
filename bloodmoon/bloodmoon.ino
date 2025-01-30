@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 void setup() {
+  init();
   delay(200);
 }
 

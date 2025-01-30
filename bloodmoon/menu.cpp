@@ -6,8 +6,8 @@
 extern Menu* activem;
 extern TFT_eSPI tft;
 
-Menu::Menu(double id, const std::string& title, bool isScrollable, int sel, int mov, std::function<void()> aDown, std::function<void()> aUp)
-  : id(id), title(title), isScrollable(isScrollable), mov(mov), sel(sel), aDown(aDown), aUp(aUp) {}
+Menu::Menu(double id, const std::string& title, bool isScrollable, int sel, int mov, std::function<void()> aDown, std::function<void()> aUp, bool menuWithIcon)
+  : id(id), menuWithIcon(menuWithIcon), title(title), isScrollable(isScrollable), mov(mov), sel(sel), aDown(aDown), aUp(aUp) {}
 
 void Menu::init() {
   mov.begin();
@@ -30,21 +30,23 @@ void Menu::render() {
   tft.setTextSize(2);
   tft.setTextDatum(MC_DATUM);
   tft.drawString(title.c_str(), tft.width() / 2, 11);
-  tft.setTextSize(3);
-  if (currentIconsSet == 1) {
-    tft.loadFont(customIcons1);
-  } else if (currentIconsSet == 2) {
-    tft.loadFont(customIcons2);
-  }
-  if (selectedIndex >= 0 && selectedIndex < icons.size()) {
-    char currentIcon = icons[selectedIndex];
-    tft.drawString(String(currentIcon), tft.width() / 2, tft.height() / 2 - 8);
-    tft.unloadFont();
-    tft.setTextSize(1);
-    tft.setTextFont(2);
-    tft.drawString(sections[selectedIndex].c_str(), tft.width() / 2, tft.height() / 2 + 27);
-    tft.drawChar('<', 20, 62);
-    tft.drawChar('>', 128 - 25, 62);
+  if (menuWithIcon) {
+    tft.setTextSize(3);
+    if (currentIconsSet == 1) {
+      tft.loadFont(customIcons1);
+    } else if (currentIconsSet == 2) {
+      tft.loadFont(customIcons2);
+    }
+    if (selectedIndex >= 0 && selectedIndex < icons.size()) {
+      char currentIcon = icons[selectedIndex];
+      tft.drawString(String(currentIcon), tft.width() / 2, tft.height() / 2 - 8);
+      tft.unloadFont();
+      tft.setTextSize(1);
+      tft.setTextFont(2);
+      tft.drawString(sections[selectedIndex].c_str(), tft.width() / 2, tft.height() / 2 + 27);
+      tft.drawChar('<', 20, 62);
+      tft.drawChar('>', 128 - 25, 62);
+    }
   }
   tft.setTextDatum(ML_DATUM);
   tft.fillRect(0, 112, 128, 16, tft.color565(161, 0, 0));

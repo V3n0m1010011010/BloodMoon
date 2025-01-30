@@ -1,4 +1,6 @@
 Menu* activem;
 Menu* mainm;
 
-Menu* scanm;
+Menu* wifim;
+Menu* bluem;
+Menu* settm;
