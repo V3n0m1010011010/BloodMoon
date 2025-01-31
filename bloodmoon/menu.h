@@ -25,6 +25,7 @@ private:
   EasyButton mov;
   EasyButton sel;
   bool movWasPressed = false;
+  bool selWasPressed = false;
   unsigned long pressStartTime = 0;
   const unsigned long longPressDuration = 300;
   bool isScrollable;
@@ -38,7 +39,7 @@ public:
   void init();
   void addSection(const std::string& section, char icon, std::function<void()> action = nullptr);
   virtual void render();
-  virtual void scrollAnimation(bool dir, int frames);
+  virtual void iconScrollAnimation(bool dir, int frames);
   void handleInput();
 
   void setParentMenu(Menu* menu);

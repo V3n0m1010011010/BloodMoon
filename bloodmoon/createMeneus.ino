@@ -3,7 +3,7 @@
 void mainMenu() {
   mainm = new Menu(0.0, "Main Menu", true, select, move, nullptr, nullptr, true);
   mainm->init();
-  mainm->addSection("Wifi", '\x21', []() {
+  mainm->addSection("WiFi", '\x21', []() {
     activem = wifim;
     activem->setSelectedIndex(0);
     activem->render();
@@ -26,11 +26,22 @@ void mainMenu() {
 //----------------------------------------------------WIFI MENU--------------------------------------------------------------------
 
 void wifiMenu() {
-  wifim = new Menu(1.0, "WIFI", true, select, move);
+  wifim = new Menu(1.0, "WiFi", true, select, move);
   wifim->init();
   wifim->addSection("Back", '\0', []() {
     activem = wifim->getParentMenu();
-    activem->setSelectedIndex(0);
+    activem->render();
+  });
+  wifim->addSection("Test", '\0', []() {
+    activem = wifim->getParentMenu();
+    activem->render();
+  });
+  wifim->addSection("Test", '\0', []() {
+    activem = wifim->getParentMenu();
+    activem->render();
+  });
+  wifim->addSection("Test", '\0', []() {
+    activem = wifim->getParentMenu();
     activem->render();
   });
 }
@@ -45,7 +56,18 @@ void blueMenu() {
   bluem->init();
   bluem->addSection("Back", '\0', []() {
     activem = bluem->getParentMenu();
-    activem->setSelectedIndex(0);
+    activem->render();
+  });
+  bluem->addSection("Test", '\0', []() {
+    activem = bluem->getParentMenu();
+    activem->render();
+  });
+  bluem->addSection("Test", '\0', []() {
+    activem = bluem->getParentMenu();
+    activem->render();
+  });
+  bluem->addSection("Test", '\0', []() {
+    activem = bluem->getParentMenu();
     activem->render();
   });
 }
@@ -58,9 +80,20 @@ void blueMenu() {
 void settMenu() {
   settm = new Menu(3.0, "Settings", true, select, move);
   settm->init();
-  settm->addSection("Back", '\0' []() {
+  settm->addSection("Back", '\0', []() {
     activem = settm->getParentMenu();
-    activem->setSelectedIndex(0);
+    activem->render();
+  });
+  settm ->addSection("Test", '\0', []() {
+    activem = settm ->getParentMenu();
+    activem->render();
+  });
+  settm ->addSection("Test", '\0', []() {
+    activem = settm ->getParentMenu();
+    activem->render();
+  });
+  settm ->addSection("Test", '\0', []() {
+    activem = settm ->getParentMenu();
     activem->render();
   });
 }
