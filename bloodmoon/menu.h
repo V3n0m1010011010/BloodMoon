@@ -5,9 +5,7 @@
 #include <string>
 #include <TFT_eSPI.h>
 #include <EasyButton.h>
-
 extern TFT_eSPI tft;
-
 class Menu {
 private:
   int id;
@@ -38,9 +36,12 @@ public:
 
   void init();
   void addSection(const std::string& section, char icon, std::function<void()> action = nullptr);
-  virtual void render();
+  virtual void renderHead();
+  virtual void renderMain();
+  virtual void renderFoot();
+  void renderAll();
   virtual void iconScrollAnimation(bool dir, int frames);
-  void handleInput();
+  bool handleInput();
 
   void setParentMenu(Menu* menu);
   Menu* getParentMenu();

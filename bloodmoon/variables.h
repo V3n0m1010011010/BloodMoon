@@ -1,4 +1,4 @@
-#define move 47
-#define select 0
-TFT_eSPI tft = TFT_eSPI();
-int currentIconsSet = 1;
+unsigned long lastActivityTime = 0;
+const unsigned long displayFade = 10000;
+const unsigned long displayTimeOut = 20000;
+bool displayOff = false;

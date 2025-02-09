@@ -1,11 +1,14 @@
-#include <TFT_eSPI.h>
 #include <EasyButton.h>
+#include <TFT_eSPI.h>
 #include "menu.h"
 #include "icons.h"
+#include "settings.h"
+#include "globals.h"
 #include "variables.h"
+#include "display.h"
 extern Menu* activem;
 extern TFT_eSPI tft;
-
+extern display dis;
 Menu::Menu(double id, const std::string& title, bool isScrollable, int sel, int mov, std::function<void()> aDown, std::function<void()> aUp, bool menuWithIcon)
   : id(id), menuWithIcon(menuWithIcon), title(title), isScrollable(isScrollable), mov(mov), sel(sel), aDown(aDown), aUp(aUp) {}
 
@@ -19,10 +22,16 @@ void Menu::addSection(const std::string& section, char icon, std::function<void(
   actions.push_back(action);
   icons.push_back(icon);
 }
-
-void Menu::render() {
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_WHITE);
+void Menu::renderHead() {
+  tft.setTextFont(0);
+  tft.fillRect(0, 0, 128, 22, tft.color565(161, 0, 0));
+  tft.drawRect(0, 0, 128, 22, tft.color565(255, 255, 255));
+  tft.fillRect(5, 0, 128 - 5 * 2, 22, tft.color565(161, 0, 0));
+  tft.setTextSize(2);
+  tft.setTextDatum(MC_DATUM);
+  tft.drawString(title.c_str(), tft.width() / 2, 11);
+}
+void Menu::renderMain() {
   tft.setTextDatum(MC_DATUM);
   if (menuWithIcon) {
     tft.setTextSize(3);
@@ -45,7 +54,7 @@ void Menu::render() {
     tft.setTextSize(1);
     tft.setTextFont(2);
     const int maxVisibleItems = 3;
-    const int maxTextWidth = 12;
+    const int maxTextWidth = 15;
     static int scrollOffset = 0;
     if (selectedIndex < scrollOffset) {
       scrollOffset = selectedIndex;
@@ -74,19 +83,21 @@ void Menu::render() {
       tft.setTextFont(2);
     }
   }
-  tft.setTextFont(0);
-  tft.fillRect(0, 0, 128, 22, tft.color565(161, 0, 0));
-  tft.drawRect(0, 0, 128, 22, tft.color565(255, 255, 255));
-  tft.fillRect(5, 0, 128 - 5 * 2, 22, tft.color565(161, 0, 0));
-  tft.setTextSize(2);
-  tft.setTextDatum(MC_DATUM);
-  tft.drawString(title.c_str(), tft.width() / 2, 11);
+}
+void Menu::renderFoot() {
   tft.setTextFont(2);
   tft.setTextSize(1);
   tft.setTextDatum(ML_DATUM);
   tft.fillRect(0, 112, 128, 16, tft.color565(161, 0, 0));
   tft.drawString("Sel", 5, 128 - 8);
   tft.drawString("Mov", 98, 128 - 8);
+}
+void Menu::renderAll() {
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_WHITE);
+  renderMain();
+  renderFoot();
+  renderHead();
 }
 
 
@@ -125,39 +136,32 @@ void Menu::iconScrollAnimation(bool dir, int frames) {
   posX = tft.width() / 2;
 }
 
-void Menu::handleInput() {
-  // mov.read();
-  // sel.read();
-  // if (mov.onPressedFor(1000) && isScrollable) {
-  //   scrollAnimation(false, 30);
-  //   selectedIndex = (selectedIndex - 1 + sections.size()) % sections.size();
-  //   render();
-  // } else if (mov.wasPressed() && isScrollable) {
-  //   scrollAnimation(true, 30);
-  //   selectedIndex = (selectedIndex + 1) % sections.size();
-  //   render();
-  // }
-  // if (sel.wasPressed()) {
-  //   actions[selectedIndex]();
-  // }
+bool Menu::handleInput() {
   mov.read();
   if (mov.isPressed() && pressStartTime == 0) {
     pressStartTime = millis();
     movWasPressed = true;
   }
   if (mov.isReleased() && movWasPressed) {
+    lastActivityTime = millis();
+    if (displayOff) {
+      dis.turnOn();
+      displayOff = false;
+    }
     unsigned long pressDuration = millis() - pressStartTime;
     if (pressDuration < longPressDuration) {
+      dis.turn();
       if (isScrollable) {
         if (menuWithIcon) iconScrollAnimation(true, 20);
         selectedIndex = (selectedIndex + 1) % sections.size();
-        render();
+        renderAll();
       }
     } else {
+      dis.turn();
       if (isScrollable) {
         if (menuWithIcon) iconScrollAnimation(false, 20);
         selectedIndex = (selectedIndex - 1 + sections.size()) % sections.size();
-        render();
+        renderAll();
       }
     }
     pressStartTime = 0;
@@ -168,9 +172,16 @@ void Menu::handleInput() {
     selWasPressed = true;
   }
   if (sel.isReleased() && selWasPressed) {
-    actions[selectedIndex]();
+    lastActivityTime = millis();
+    if (displayOff) {
+      dis.turnOn();
+      displayOff = false;
+    }
     selWasPressed = false;
+    dis.turn();
+    actions[selectedIndex]();
   }
+  return false;
 }
 
 void Menu::setSubMenu(Menu* menu) {
