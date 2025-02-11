@@ -13,9 +13,9 @@ Features:
 
 Hardware Requirements:
 
-LilyGO T-QT Pro (ESP32-S3)
+*LilyGO T-QT Pro* (ESP32-S3)
 
-nRF24L01 module (for jamming functionality)
+*nRF24L01 module* (for jamming functionality)
 
 
 This project is still in development, and more features will be added over time. Contributions and feedback are welcome! 
