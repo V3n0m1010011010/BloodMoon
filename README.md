@@ -19,6 +19,7 @@ BloodMoon is a custom firmware for the LilyGO T-QT Pro (ESP32-S3), inspired by M
 - *LilyGO T-QT Pro* (ESP32-S3)
 
 - *nRF24L01 module* (for jamming functionality)
+	- Pins can be modified in code
 
 
 <br>
