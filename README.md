@@ -2,10 +2,9 @@
 
 BloodMoon is a custom firmware for the LilyGO T-QT Pro (ESP32-S3), inspired by Marauder. It provides wireless scanning and attack functionalities for 2.4GHz networks.
 
-
+ 
 
 ### Features:
-
 
 - *Wi-Fi Scanner* – Detects nearby access points and displays essential network information.
 
