@@ -5,74 +5,97 @@
 #include "display.h"
 extern Menu* activem;
 extern display dis;
+wifi* wifi::instance = nullptr;
 void wifi::init() {
+  instance = this;
   WiFi.mode(WIFI_STA);
-  esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE);
 }
 void wifi::scanAps() {
   scanAp = true;
   firstApScan = true;
   apList.clear();
   WiFi.mode(WIFI_STA);
-  WiFi.scanNetworks(true, true);
-  uint32_t lastScanMillis = millis();
-  bool scanInProgress = false;
-  while (scanAp) {
-    int scanStatus = WiFi.scanComplete();
-    if (scanStatus >= 0) {
-      bool listUpdated = false;
-      for (int i = 0; i < scanStatus; ++i) {
-        String ssid = WiFi.SSID(i);
-        const uint8_t* bssid = WiFi.BSSID(i);
-        bool exists = false;
-        for (const auto& ap : apList) {
-          if (ap.ssid == ssid && memcmp(ap.bssid.data(), bssid, 6) == 0) {
-            exists = true;
-            break;
-          }
-        }
-        if (!exists) {
-          std::array<uint8_t, 6> bssidArray;
-          memcpy(bssidArray.data(), bssid, 6);
-          apList.push_back({ssid, bssidArray});
-          listUpdated = true;
-        }
-      }
-      if (listUpdated) {
-        dis.renderApScanMenu();
-      }
-      WiFi.scanDelete();
-      scanInProgress = false;
-    }
-
-    // Neuen Scan alle 3 Sekunden starten (nur wenn nicht aktiv)
-    if (!scanInProgress && (millis() - lastScanMillis > 3000)) {
-      WiFi.scanNetworks(true, true);
-      scanInProgress = true;
-      lastScanMillis = millis();
-    }
-
-    // Non-blocking Input-Check alle 50ms
-    static uint32_t lastInputCheck = 0;
-    if (millis() - lastInputCheck > 50) {
-      if (activem->handleInput()) {
-        // Bei User-Input sofort reagieren
-        break;
-      }
-      lastInputCheck = millis();
-    }
-
-    // Kurze Pause um andere Tasks zu ermöglichen
-    delay(10);
-  }
-
-  // Cleanup
-  WiFi.scanDelete();
-  scanAp = false;
+  wifi_promiscuous_filter_t filter = {
+    .filter_mask = WIFI_PROMIS_FILTER_MASK_MGMT
+  };
+  esp_wifi_set_promiscuous_filter(&filter);
+  esp_wifi_set_promiscuous_rx_cb(&beaconCallbackAp);
+  esp_wifi_set_promiscuous(true);
 }
 void wifi::scanSts() {
+  scanSt = true;
+  firstApScan = true;
+  stList.clear();
+  wifi_promiscuous_filter_t filter = {
+    .filter_mask = WIFI_PROMIS_FILTER_MASK_DATA | WIFI_PROMIS_FILTER_MASK_MGMT
+  };
+  esp_wifi_set_promiscuous_filter(&filter);
+  esp_wifi_set_promiscuous_rx_cb(&beaconCallbackSt);
+  esp_wifi_set_promiscuous(true);
 }
-void wifi::sniffer(uint8_t* buf, uint16_t len) {
+void wifi::stopScan() {
+  scanAp = false;
+  scanSt = false;
+  esp_wifi_set_promiscuous(false);
+}
+void wifi::beaconCallbackAp(void* buf, wifi_promiscuous_pkt_type_t type) {
+  if (type != WIFI_PKT_MGMT) return;
+  auto* sniffer = (wifi_promiscuous_pkt_t*)buf;
+  const uint8_t* frame = sniffer->payload;
+  if (frame[0] != 0x80) return;
+  uint8_t channel = sniffer->rx_ctrl.channel;
+  const uint8_t* bssid = &frame[10];
+  uint8_t ssidLen = frame[37];
+  String ssid = String((const char*)&frame[38], ssidLen);
+  if (ssid.isEmpty()) return;
+  std::lock_guard<std::mutex> lock(instance->apMutex);
+  bool exists = false;
+  for (const auto& ap : instance->apList) {
+    if (ap.ssid == ssid && memcmp(ap.bssid.data(), bssid, 6) == 0) {
+      exists = true;
+      break;
+    }
+  }
+  if (!exists) {
+    AccessPoint newAp;
+    newAp.ssid = ssid;
+    memcpy(newAp.bssid.data(), bssid, 6);
+    newAp.channel = channel;
+    newAp.isSelected = false;
+    instance->apList.push_back(newAp);
+    dis.renderApScanMenu();
+  }
+}
+void wifi::beaconCallbackSt(void* buf, wifi_promiscuous_pkt_type_t type) {
+  if (!instance || !instance->scanSt) return;
+  auto* sniffer = (wifi_promiscuous_pkt_t*)buf;
+  const wifi_pkt_rx_ctrl_t* ctrl = &sniffer->rx_ctrl;
+  const uint8_t* frame = sniffer->payload;
+  Station newSt;
+  newSt.channel = ctrl->channel;
+  newSt.rssi = ctrl->rssi;
+  if (type == WIFI_PKT_DATA) {
+    memcpy(newSt.mac.data(), frame + 4, 6);                // Source MAC (Client)
+    memcpy(newSt.bssid.data(), frame + 16, 6);             // BSSID (AP)
+  } else if (type == WIFI_PKT_MGMT && frame[0] == 0x40) {  // Probe Request
+    memcpy(newSt.mac.data(), frame + 10, 6);               // Client MAC
+    memset(newSt.bssid.data(), 0, 6);                      // Kein BSSID
+  }
+  newSt.isSelected = false;
+  std::lock_guard<std::mutex> lock(instance->stMutex);
+  bool exists = false;
+  for (const auto& st : instance->stList) {
+    if (memcmp(st.mac.data(), newSt.mac.data(), 6) == 0) {
+      exists = true;
+      break;
+    }
+  }
+  if (!exists) {
+    instance->stList.push_back(newSt);
+    dis.renderStScanMenu();
+  }
+}
+void wifi::packetSniffer(uint8_t* buf, uint16_t len) {
 }
 double wifi::getMultiplicator(long maxRow, long LineVal) {
   maxVal = 1;
@@ -87,9 +110,17 @@ void wifi::packetMonitor() {
 std::vector<AccessPoint> wifi::getApList() {
   return apList;
 }
-void wifi::clearApList(){
-  apList.clear();
+std::vector<Station> wifi::getStList() {
+  return stList;
 }
-void wifi::setApScanStatus(bool status) {
-  scanAp = status;
+void wifi::setScanStatus(int i, bool status) {
+  if(i == 0){
+    scanAp = false;
+  }else if(i == 1){
+    scanSt = false;
+  }
+}
+std::vector<bool> wifi::getFirstScan() {
+  std::vector<bool> scanns = { firstApScan, firstStScan };
+  return scanns;
 }

@@ -9,179 +9,13 @@
 extern Menu* activem;
 extern TFT_eSPI tft;
 extern display dis;
-Menu::Menu(double id, const std::string& title, bool isScrollable, int sel, int mov, std::function<void()> aDown, std::function<void()> aUp, bool menuWithIcon)
-  : id(id), menuWithIcon(menuWithIcon), title(title), isScrollable(isScrollable), mov(mov), sel(sel), aDown(aDown), aUp(aUp) {}
-
-void Menu::init() {
-  mov.begin();
-  sel.begin();
-}
+Menu::Menu(String type, const std::string& title, bool isScrollable, std::function<void()> aDown, std::function<void()> aUp, bool menuWithIcon)
+  : type(type), menuWithIcon(menuWithIcon), title(title), isScrollable(isScrollable), aDown(aDown), aUp(aUp) {}
 
 void Menu::addSection(const std::string& section, char icon, std::function<void()> action) {
   sections.push_back(section);
   actions.push_back(action);
   icons.push_back(icon);
-}
-void Menu::renderHead() {
-  tft.setTextFont(0);
-  tft.fillRect(0, 0, 128, 22, tft.color565(161, 0, 0));
-  tft.drawRect(0, 0, 128, 22, tft.color565(255, 255, 255));
-  tft.fillRect(5, 0, 128 - 5 * 2, 22, tft.color565(161, 0, 0));
-  tft.setTextSize(2);
-  tft.setTextDatum(MC_DATUM);
-  tft.drawString(title.c_str(), tft.width() / 2, 11);
-}
-void Menu::renderMain() {
-  tft.setTextDatum(MC_DATUM);
-  if (menuWithIcon) {
-    tft.setTextSize(3);
-    if (currentIconsSet == 1) {
-      tft.loadFont(customIcons1);
-    } else if (currentIconsSet == 2) {
-      tft.loadFont(customIcons2);
-    }
-    if (selectedIndex >= 0 && selectedIndex < icons.size()) {
-      char currentIcon = icons[selectedIndex];
-      tft.drawString(String(currentIcon), tft.width() / 2, tft.height() / 2 - 8);
-      tft.unloadFont();
-      tft.setTextSize(1);
-      tft.setTextFont(2);
-      tft.drawString(sections[selectedIndex].c_str(), tft.width() / 2, tft.height() / 2 + 27);
-      tft.drawChar('<', 20, 62);
-      tft.drawChar('>', 128 - 25, 62);
-    }
-  } else {
-    tft.setTextSize(1);
-    tft.setTextFont(2);
-    const int maxVisibleItems = 3;
-    const int maxTextWidth = 15;
-    static int scrollOffset = 0;
-    if (selectedIndex < scrollOffset) {
-      scrollOffset = selectedIndex;
-    } else if (selectedIndex >= scrollOffset + maxVisibleItems) {
-      scrollOffset = selectedIndex - maxVisibleItems + 1;
-    }
-    for (int i = scrollOffset; i < std::min(scrollOffset + maxVisibleItems, (int)sections.size()); ++i) {
-      int y = 25 + ((i - scrollOffset) * 22);
-      if (i == selectedIndex) {
-        tft.fillRect(5, y, 118, 22, tft.color565(50, 0, 0));
-        tft.drawRect(5, y, 118, 22, tft.color565(10, 0, 0));
-      } else {
-        tft.fillRect(5, y, 118, 22, tft.color565(80, 0, 0));
-        tft.drawRect(5, y, 118, 22, tft.color565(10, 0, 0));
-      }
-      tft.drawString(sections[i].substr(0, maxTextWidth).c_str(), tft.width() / 2, y + 11);
-    }
-    if (sections.size() > maxVisibleItems && selectedIndex < sections.size() - 1) {
-      if (currentIconsSet == 1) {
-        tft.loadFont(customIcons1);
-      } else if (currentIconsSet == 2) {
-        tft.loadFont(customIcons2);
-      }
-      tft.drawString(String('\x24'), tft.width() / 2 - 4, 95);
-      tft.unloadFont();
-      tft.setTextFont(2);
-    }
-  }
-}
-void Menu::renderFoot() {
-  tft.setTextFont(2);
-  tft.setTextSize(1);
-  tft.setTextDatum(ML_DATUM);
-  tft.fillRect(0, 112, 128, 16, tft.color565(161, 0, 0));
-  tft.drawString("Sel", 5, 128 - 8);
-  tft.drawString("Mov", 98, 128 - 8);
-}
-void Menu::renderAll() {
-  tft.fillScreen(TFT_BLACK);
-  tft.setTextColor(TFT_WHITE);
-  renderMain();
-  renderFoot();
-  renderHead();
-}
-
-
-void Menu::iconScrollAnimation(bool dir, int frames) {
-  tft.setTextDatum(MC_DATUM);
-  for (int i = 0; i < frames; i++) {
-    int dx = dir ? 128 / frames : -(128 / frames);
-    posX -= dx;
-    tft.fillRect(0, 22, 128, 90, TFT_BLACK);
-    tft.setTextSize(3);
-    if (currentIconsSet == 1) {
-      tft.loadFont(customIcons1);
-    } else if (currentIconsSet == 2) {
-      tft.loadFont(customIcons2);
-    }
-    if (selectedIndex >= 0 && selectedIndex < icons.size()) {
-      int indexBefore = (selectedIndex - 1 < 0) ? icons.size() - 1 : selectedIndex - 1;
-      int indexCurrent = selectedIndex;
-      int indexAfter = (selectedIndex + 1 > icons.size() - 1) ? 0 : selectedIndex + 1;
-      char beforeIcon = icons[indexBefore];
-      char currentIcon = icons[selectedIndex];
-      char afterIcon = icons[indexAfter];
-      tft.setTextWrap(false);
-      tft.drawString(String(currentIcon), posX, tft.height() / 2 - 8);
-      tft.drawString(String(beforeIcon), posX - tft.width(), tft.height() / 2 - 8);
-      tft.drawString(String(afterIcon), posX + tft.width(), tft.height() / 2 - 8);
-      tft.unloadFont();
-      tft.setTextSize(1);
-      tft.setTextFont(2);
-      tft.drawString(sections[indexCurrent].c_str(), posX, tft.height() / 2 + 27);
-      tft.drawString(sections[indexBefore].c_str(), posX - tft.width(), tft.height() / 2 + 27);
-      tft.drawString(sections[indexAfter].c_str(), posX + tft.width(), tft.height() / 2 + 27);
-    }
-    delay(5);
-  }
-  posX = tft.width() / 2;
-}
-
-bool Menu::handleInput() {
-  mov.read();
-  if (mov.isPressed() && pressStartTime == 0) {
-    pressStartTime = millis();
-    movWasPressed = true;
-  }
-  if (mov.isReleased() && movWasPressed) {
-    lastActivityTime = millis();
-    if (displayOff) {
-      dis.turnOn();
-      displayOff = false;
-    }
-    unsigned long pressDuration = millis() - pressStartTime;
-    if (pressDuration < longPressDuration) {
-      dis.turn();
-      if (isScrollable) {
-        if (menuWithIcon) iconScrollAnimation(true, 20);
-        selectedIndex = (selectedIndex + 1) % sections.size();
-        renderAll();
-      }
-    } else {
-      dis.turn();
-      if (isScrollable) {
-        if (menuWithIcon) iconScrollAnimation(false, 20);
-        selectedIndex = (selectedIndex - 1 + sections.size()) % sections.size();
-        renderAll();
-      }
-    }
-    pressStartTime = 0;
-    movWasPressed = false;
-  }
-  sel.read();
-  if (sel.wasPressed()) {
-    selWasPressed = true;
-  }
-  if (sel.isReleased() && selWasPressed) {
-    lastActivityTime = millis();
-    if (displayOff) {
-      dis.turnOn();
-      displayOff = false;
-    }
-    selWasPressed = false;
-    dis.turn();
-    actions[selectedIndex]();
-  }
-  return false;
 }
 
 void Menu::setSubMenu(Menu* menu) {
@@ -200,7 +34,9 @@ Menu* Menu::getSubMenu() {
 Menu* Menu::getParentMenu() {
   return parentMenu;
 }
-
+String Menu::getType(){
+  return type;
+}
 int Menu::getSelectedIndex() {
   return selectedIndex;
 }
@@ -210,6 +46,12 @@ void Menu::setSelectedIndex(int index) {
   } else {
     selectedIndex = 0;
   }
+}
+bool Menu::isScroll() {
+  return isScrollable;
+}
+bool Menu::isMenuWithIcon() {
+  return menuWithIcon;
 }
 void Menu::setlist(std::vector<bool> list) {
   selectedList = list;
@@ -228,6 +70,18 @@ void Menu::setSection(std::string t, int i) {
 }
 std::string Menu::getSection(int i) {
   return sections[i];
+}
+int Menu::getSectionsSize() {
+  return sections.size();
+}
+char Menu::getIcon(int i){
+  return icons[i];
+}
+int Menu::getIconsSize(){
+  return icons.size();
+}
+void Menu::executeAction(int i) {
+  actions[i]();
 }
 void Menu::setScroll(bool scroll) {
   isScrollable = scroll;

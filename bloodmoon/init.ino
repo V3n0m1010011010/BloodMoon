@@ -3,6 +3,8 @@ void initAll() {
   Serial.begin(115200);
   mySPI.begin(17, 16, 18, 33);
   nRF24.init();
+  Wifi.init();
+  ctr.init();
   delay(200);
   dis.renderBoot();
   pinMode(10, OUTPUT);
@@ -17,8 +19,6 @@ void initAll() {
   wifiAttackDeauthMenu();
   wifiGeneralMenu();
   wifiGeneralSelectMenu();
-  wifiGeneralSelectApMenu();
-  wifiGeneralSelectStMenu();
   blueMenu();
   nrfMenu();
   nrfJammerMenu();
@@ -31,8 +31,6 @@ void initAll() {
   wifiAttackm->setSubMenu(wifiAttackDeauthm);
   wifim->setSubMenu(wifiGeneralm);
   wifiGeneralm->setSubMenu(wifiGeneralSelectm);
-  wifiGeneralSelectm->setSubMenu(wifiGeneralSelectApm);
-  wifiGeneralSelectm->setSubMenu(wifiGeneralSelectStm);
   mainm->setSubMenu(bluem);
   if (nRF24.getInit()) {
     mainm->setSubMenu(nrfm);
@@ -40,7 +38,7 @@ void initAll() {
   }
   mainm->setSubMenu(settm);
   activem = mainm;
-  dis.renderIconMenu();
+  dis.renderAll();
   lastActivityTime = millis();
 }
 
@@ -49,29 +47,28 @@ void initAll() {
 //----------------------------------------------------MAIN MENU--------------------------------------------------------------------
 
 void mainMenu() {
-  mainm = new Menu(0.0, "Main Menu", true, select, move, nullptr, nullptr, true);
-  mainm->init();
+  mainm = new Menu("normal", "Main Menu", true, nullptr, nullptr, true);
   mainm->addSection("WiFi", '\x21', []() {
     activem = wifim;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
   mainm->addSection("Bluetooth", '\x22', []() {
     activem = bluem;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
   if (nRF24.getInit()) {
     mainm->addSection("nRF24", '\x25', []() {
       activem = nrfm;
       activem->setSelectedIndex(0);
-      dis.renderMenu();
+      dis.renderAll();
     });
   }
   mainm->addSection("Settings", '\x23', []() {
     activem = settm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
 }
 
@@ -81,40 +78,38 @@ void mainMenu() {
 //----------------------------------------------------WIFI MENU--------------------------------------------------------------------
 
 void wifiMenu() {
-  wifim = new Menu(1.0, "WiFi", true, select, move);
-  wifim->init();
+  wifim = new Menu("normal", "WiFi", true);
   wifim->addSection("Back", '\0', []() {
     activem = wifim->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifim->addSection("Scanning", '\0', []() {
     activem = wifiScanm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifim->addSection("Attack", '\0', []() {
     activem = wifiAttackm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifim->addSection("Gerneral", '\0', []() {
     activem = wifiGeneralm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifim->addSection("Sniffer", '\0', []() {
     activem = wifiSnifferm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
 }
 
 void wifiScanMenu() {
-  wifiScanm = new Menu(1.0, "Scan", true, select, move);
-  wifiScanm->init();
+  wifiScanm = new Menu("normal", "Scan", true);
   wifiScanm->addSection("Back", '\0', []() {
     activem = wifiScanm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifiScanm->addSection("Scan Ap's", '\0', []() {
     activem = wifiScanApsm;
@@ -124,107 +119,110 @@ void wifiScanMenu() {
   wifiScanm->addSection("Scan St's", '\0', []() {
     activem = wifiScanStsm;
     dis.renderStScanMenu();
+    Wifi.scanSts();
   });
 }
 void wifiScanApMenu() {
-  wifiScanApsm = new Menu(1.0, "Scanning", false, select, move);
-  wifiScanApsm->init();
+  wifiScanApsm = new Menu("scan", "Scanning", false);
   wifiScanApsm->addSection("Back", '\0', []() {
-    Wifi.setApScanStatus(false);
-    Wifi.clearApList();
-    Serial.println("SelPressed");
+    Wifi.stopScan();
     activem = wifiScanApsm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
 }
 void wifiScanStMenu() {
-  wifiScanStsm = new Menu(1.0, "Scanning", false, select, move);
-  wifiScanStsm->init();
+  wifiScanStsm = new Menu("scan", "Scanning", false);
   wifiScanStsm->addSection("Back", '\0', []() {
+    Wifi.stopScan();
     activem = wifiScanStsm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
 }
 void wifiAttackMenu() {
-  wifiAttackm = new Menu(0.0, "Attacks", true, select, move);
-  wifiAttackm->init();
+  wifiAttackm = new Menu("normal", "Attacks", true);
   wifiAttackm->addSection("Back", '\0', []() {
     activem = wifiAttackm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifiAttackm->addSection("Deauth", '\0', []() {
     activem = wifiAttackDeauthm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
 }
 void wifiAttackDeauthMenu() {
-  wifiAttackm = new Menu(0.0, "Deauther", true, select, move);
-  wifiAttackm->init();
+  wifiAttackm = new Menu("deauther", "Deauther", true);
   wifiAttackm->addSection("Back", '\0', []() {
     activem = wifiAttackm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifiAttackm->addSection("Start", '\0', []() {
     if (Attack.getMode(0) == true) {
       activem->setTitle("Deauther");
       activem->setSection("Start", 1);
-      dis.renderMenu();
+      dis.renderAll();
     } else {
       activem->setTitle("Deauthing");
       activem->setSection("Stop", 1);
-      dis.renderMenu();
+      dis.renderAll();
       Attack.deauth();
     }
   });
 }
 
 void wifiGeneralMenu() {
-  wifiGeneralm = new Menu(0.0, "General", true, select, move);
-  wifiGeneralm->init();
+  wifiGeneralm = new Menu("normal", "General", true);
   wifiGeneralm->addSection("Back", '\0', []() {
     activem = wifiGeneralm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifiGeneralm->addSection("Select", '\0', []() {
     activem = wifiGeneralSelectm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
 }
 void wifiGeneralSelectMenu() {
-  wifiGeneralSelectm = new Menu(0.0, "Select", true, select, move);
-  wifiGeneralSelectm->init();
+  wifiGeneralSelectm = new Menu("normal", "Select", true);
   wifiGeneralSelectm->addSection("Back", '\0', []() {
     activem = wifiGeneralSelectm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
   wifiGeneralSelectm->addSection("AccessPoints", '\0', []() {
+    wifiGeneralSelectApMenu();
     activem = wifiGeneralSelectApm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderApSelectMenu();
   });
   wifiGeneralSelectm->addSection("Stations", '\0', []() {
+    wifiGeneralSelectStMenu();
     activem = wifiGeneralSelectStm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderStSelectMenu();
   });
 }
+
 void wifiGeneralSelectApMenu() {
-  wifiGeneralSelectApm = new Menu(0.0, "General", true, select, move);
-  wifiGeneralSelectApm->init();
+  wifiGeneralSelectApm = new Menu("apSelect", "AP's", true);
   wifiGeneralSelectApm->addSection("Back", '\0', []() {
     activem = wifiGeneralSelectApm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
+  Serial.println(Wifi.getApList().size());
+  for (auto& i : Wifi.getApList()) {
+    wifiGeneralSelectApm->addSection(i.ssid.c_str(), '\0');
+  }
+  wifiGeneralSelectm->setSubMenu(wifiGeneralSelectApm);
 }
+
+
 void wifiGeneralSelectStMenu() {
-  wifiGeneralSelectApm = new Menu(0.0, "General", true, select, move);
-  wifiGeneralSelectApm->init();
-  wifiGeneralSelectApm->addSection("Back", '\0', []() {
-    activem = wifiGeneralSelectApm->getParentMenu();
-    dis.renderMenu();
+  wifiGeneralSelectStm = new Menu("stSelect", "ST's", true);
+  wifiGeneralSelectStm->addSection("Back", '\0', []() {
+    activem = wifiGeneralSelectStm->getParentMenu();
+    dis.renderAll();
   });
+  wifiGeneralSelectm->setSubMenu(wifiGeneralSelectStm);
 }
 //----------------------------------------------------END WIFI MENU--------------------------------------------------------------------
 
@@ -232,26 +230,25 @@ void wifiGeneralSelectStMenu() {
 //----------------------------------------------------Bluetooth MENU--------------------------------------------------------------------
 
 void blueMenu() {
-  bluem = new Menu(2.0, "BLT", true, select, move);
-  bluem->init();
+  bluem = new Menu("normal", "BLT", true);
   bluem->addSection("Back", '\0', []() {
     activem = bluem->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
   bluem->addSection("Blue-Scan", '\0', []() {
     activem = blueScanm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
   bluem->addSection("Blue-Attacks", '\0', []() {
     activem = blueAttackm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
   bluem->addSection("Blue-Sniffer", '\0', []() {
     activem = blueSnifferm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
 }
 
@@ -263,11 +260,10 @@ void blueMenu() {
 
 void nrfMenu() {
   if (nRF24.getInit()) {
-    nrfm = new Menu(3.0, "nRF24", true, select, move);
-    nrfm->init();
+    nrfm = new Menu("normal", "nRF24", true);
     nrfm->addSection("Back", '\0', []() {
       activem = nrfm->getParentMenu();
-      dis.renderMenu();
+      dis.renderAll();
     });
     nrfm->addSection("Jammer", '\0', []() {
       activem = nrfJammerm;
@@ -280,11 +276,10 @@ void nrfMenu() {
 }
 void nrfJammerMenu() {
   if (nRF24.getInit()) {
-    nrfJammerm = new Menu(3.0, "Jammer", false, select, move);
-    nrfJammerm->init();
+    nrfJammerm = new Menu("jammer", "Jammer", false);
     nrfJammerm->addSection("Back", '\0', []() {
       activem = nrfJammerm->getParentMenu();
-      dis.renderMenu();
+      dis.renderAll();
       Attack.setMode(1, false);
     });
   }
@@ -297,21 +292,20 @@ void nrfJammerMenu() {
 //----------------------------------------------------Settings MENU--------------------------------------------------------------------
 
 void settMenu() {
-  settm = new Menu(3.0, "Settings", true, select, move);
-  settm->init();
+  settm = new Menu("normal", "Settings", true);
   settm->addSection("Back", '\0', []() {
     activem = settm->getParentMenu();
-    dis.renderMenu();
+    dis.renderAll();
   });
   settm->addSection("Set UI-color", '\0', []() {
     activem = settColorm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
   settm->addSection("Set Icons-set", '\0', []() {
     activem = settIconsm;
     activem->setSelectedIndex(0);
-    dis.renderMenu();
+    dis.renderAll();
   });
 }
 

