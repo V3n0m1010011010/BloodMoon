@@ -11,8 +11,6 @@ BloodMoon is a custom firmware for the LilyGO T-QT Pro (ESP32-S3), inspired by M
 - *2.4GHz Jamming* – Uses an nRF24L01 module to disrupt 2.4GHz wireless signals.
 
 
-  
-
 
 <br>
 
