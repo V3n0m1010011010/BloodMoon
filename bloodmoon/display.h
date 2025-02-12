@@ -6,7 +6,7 @@ private:
   unsigned int startY;
   unsigned int endX;
   unsigned int endY;
-  int posX = tft.width() / 2;
+  int posX;
 public:
   display(int startX, int startY, int endX, int endY);
   virtual void renderBoot();

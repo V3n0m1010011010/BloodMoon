@@ -22,21 +22,22 @@ display::display(int startX, int startY, int endX, int endY)
   : startX(startX), startY(startY), endX(endX), endY(endY) {
   ledcSetup(pwmChannel, pwmFrequency, 8);
   ledcAttachPin(backlightPin, pwmChannel);
+  posX = width / 2;
 }
 //------------------------------------------------------------------------------------------------
 void display::renderBoot() {  // Render boot sequence
   tft.fillScreen(TFT_BLACK);
-  tft.drawBitmap(tft.width() / 4, tft.height() / 4 - 10, ghost, 64, 64, TFT_WHITE);
+  tft.drawBitmap(width / 4, height / 4 - 10, ghost, 64, 64, TFT_WHITE);
   tft.setTextDatum(MC_DATUM);
   tft.setTextSize(1);
   tft.setTextFont(2);
   tft.setTextColor(TFT_WHITE);
-  tft.drawString("BloodMoon", tft.width() / 2, 100);
+  tft.drawString("BloodMoon", width / 2, 100);
   delay(2000);
   tft.fillScreen(TFT_BLACK);
-  tft.drawString("Firmware", tft.width() / 2, 128 / 3);
-  tft.drawString("by", tft.width() / 2, tft.height() / 2);
-  tft.drawString("V3n0m1010011010", tft.width() / 2, (128 / 3) * 2);
+  tft.drawString("Firmware", width / 2, 128 / 3);
+  tft.drawString("by", width / 2, height / 2);
+  tft.drawString("V3n0m1010011010", width / 2, (128 / 3) * 2);
   delay(1000);
   tft.setTextDatum(ML_DATUM);
   tft.fillScreen(TFT_BLACK);
@@ -62,7 +63,7 @@ void display::renderHead() {
   tft.fillRect(5, 0, 128 - 5 * 2, 22, tft.color565(161, 0, 0));
   tft.setTextSize(2);
   tft.setTextDatum(MC_DATUM);
-  tft.drawString(activem->getTitle().c_str(), tft.width() / 2, 11);
+  tft.drawString(activem->getTitle().c_str(), width / 2, 11);
 }
 void display::renderMainWithIcon() {
   int selectedIndex = activem->getSelectedIndex();
@@ -78,11 +79,11 @@ void display::renderMainWithIcon() {
   }
   if (selectedIndex >= 0 && selectedIndex < iconSize) {
     char currentIcon = activem->getIcon(selectedIndex);
-    tft.drawString(String(currentIcon), tft.width() / 2, tft.height() / 2 - 8);
+    tft.drawString(String(currentIcon), width / 2, height / 2 - 8);
     tft.unloadFont();
     tft.setTextSize(1);
     tft.setTextFont(2);
-    tft.drawString(section.c_str(), tft.width() / 2, tft.height() / 2 + 27);
+    tft.drawString(section.c_str(), width / 2, height / 2 + 27);
     tft.drawChar('<', 20, 62);
     tft.drawChar('>', 128 - 25, 62);
   }
@@ -112,7 +113,7 @@ void display::renderMain() {
       tft.fillRect(5, y, 118, 22, tft.color565(80, 0, 0));
       tft.drawRect(5, y, 118, 22, tft.color565(10, 0, 0));
     }
-    tft.drawString(activem->getSection(i).substr(0, maxTextWidth).c_str(), tft.width() / 2, y + 11);
+    tft.drawString(activem->getSection(i).substr(0, maxTextWidth).c_str(), width / 2, y + 11);
   }
   if (sectionSize > maxVisibleItems && selectedIndex < sectionSize - 1) {
     if (currentIconsSet == 1) {
@@ -120,7 +121,7 @@ void display::renderMain() {
     } else if (currentIconsSet == 2) {
       tft.loadFont(customIcons2);
     }
-    tft.drawString(String('\x24'), tft.width() / 2 - 4, 95);
+    tft.drawString(String('\x24'), width / 2 - 4, 95);
     tft.unloadFont();
     tft.setTextFont(2);
   }
@@ -175,19 +176,19 @@ void display::renderIconScrollAnimation(bool dir, int frames) {
       char currentIcon = activem->getIcon(selectedIndex);
       char afterIcon = activem->getIcon(indexAfter);
       tft.setTextWrap(false);
-      tft.drawString(String(currentIcon), posX, tft.height() / 2 - 8);
-      tft.drawString(String(beforeIcon), posX - tft.width(), tft.height() / 2 - 8);
-      tft.drawString(String(afterIcon), posX + tft.width(), tft.height() / 2 - 8);
+      tft.drawString(String(currentIcon), posX, height / 2 - 8);
+      tft.drawString(String(beforeIcon), posX - width, height / 2 - 8);
+      tft.drawString(String(afterIcon), posX + width, height / 2 - 8);
       tft.unloadFont();
       tft.setTextSize(1);
       tft.setTextFont(2);
-      tft.drawString(activem->getSection(indexCurrent).c_str(), posX, tft.height() / 2 + 27);
-      tft.drawString(activem->getSection(indexBefore).c_str(), posX - tft.width(), tft.height() / 2 + 27);
-      tft.drawString(activem->getSection(indexAfter).c_str(), posX + tft.width(), tft.height() / 2 + 27);
+      tft.drawString(activem->getSection(indexCurrent).c_str(), posX, height / 2 + 27);
+      tft.drawString(activem->getSection(indexBefore).c_str(), posX - width, height / 2 + 27);
+      tft.drawString(activem->getSection(indexAfter).c_str(), posX + width, height / 2 + 27);
     }
     delay(5);
   }
-  posX = tft.width() / 2;
+  posX = width / 2;
 }
 //------------------------------------------------------------------------------------------------
 
@@ -209,7 +210,7 @@ void display::renderApScanMenu() {
   }
   for (int i = scrollOffset; i < std::min(scrollOffset + maxVisibleItems, (int)Wifi.getApList().size()); ++i) {
     int y = startY + 10 + ((i - scrollOffset) * 10);
-    tft.drawString(Wifi.getApList()[i].ssid.substring(0, maxTextWidth).c_str(), tft.width() / 2, y);
+    tft.drawString(Wifi.getApList()[i].ssid.substring(0, maxTextWidth).c_str(), width / 2, y);
   }
   renderFoot();
 }
@@ -239,7 +240,7 @@ void display::renderStScanMenu() {
       }
     }
     tft.setTextDatum(MC_DATUM);
-    tft.drawString(ss.str().c_str(), tft.width() / 2, y);
+    tft.drawString(ss.str().c_str(), width / 2, y);
   }
   renderFoot();
 }
@@ -254,7 +255,7 @@ void display::renderApSelectMenu() {
     tft.setTextSize(1);
     tft.setTextFont(2);
     tft.setTextDatum(MC_DATUM);
-    tft.drawString(activem->getSection(0).c_str(), posX, tft.height() / 2);
+    tft.drawString(activem->getSection(0).c_str(), posX, height / 2);
   } else if (Wifi.getFirstScan()[0]) {
     tft.setTextSize(1);
     tft.setTextFont(2);
@@ -264,7 +265,7 @@ void display::renderApSelectMenu() {
     std::array<uint8_t, 6> bssid = ap.bssid;
     int channel = ap.channel;
     bool isSelected = ap.isSelected;
-    tft.drawString(ssid, -(tft.width() / 2) + posX + 5, startY + 5);
+    tft.drawString(ssid, -(width / 2) + posX + 5, startY + 5);
   }
   renderFoot();
 }
