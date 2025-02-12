@@ -34,7 +34,7 @@ BloodMoon is a custom firmware for the LilyGO T-QT Pro (ESP32-S3), inspired by M
 
 ### To install via Arduino IDE:
 #
-- With any text editor, open C:\Users\<USERNAME>\AppDate\Local\Arduino15\packages\esp32\hardware\esp32\2.0.3\platform.txt
+- With any text editor, open `C:\Users\<USERNAME>\AppDate\Local\Arduino15\packages\esp32\hardware\esp32\2.0.3\platform.txt`
 - Add `-w` to the following compiler settings
   - `build.extra_flags.esp32s3`
 - Add `-zmuldefs` to the following compiler settings
