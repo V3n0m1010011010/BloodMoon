@@ -6,7 +6,7 @@ BloodMoon is a custom firmware for the LilyGO T-QT Pro (ESP32-S3), inspired by M
 
 ### Features:
 #
-- *Wi-Fi Scanner* – Detects nearby access points and displays essential network information.
+- *Wi-Fi Scanner* – Detects nearby access points or Stations and displays essential network information.
 
 - *2.4GHz Jamming* – Uses an nRF24L01 module to disrupt 2.4GHz wireless signals.
 
@@ -23,21 +23,21 @@ BloodMoon is a custom firmware for the LilyGO T-QT Pro (ESP32-S3), inspired by M
 
 <br>
 
-### In developement:
+### In development:
 #
-- [ ] display scanned AP's/ST's infos (SSID, BSSID, Channel)
-- [ ] Multiselecting scanned AP's/ST's
-- [ ] Deauther-attack
-- [ ] Beacon-spam
+- [ ] display scanned APs/STs - info (SSID, BSSID, Channel)
+- [ ] Multiselecting scanned APs/STs
+- [ ] Deauthentification-attack
+- [ ] Beacon-spamming
 
 <br>
 
 ### To install via Arduino IDE:
 #
 - With any text editor, open `C:\Users\<USERNAME>\AppDate\Local\Arduino15\packages\esp32\hardware\esp32\2.0.3\platform.txt`
-- Add `-w` to the following compiler settings
+- Add `-w` to the following compiler setting for esp32s3
   - `build.extra_flags.esp32s3`
-- Add `-zmuldefs` to the following compiler settings
+- Add `-zmuldefs` to the following compiler setting for esp32s3
   - `compiler.c.elf.libs.esp32s3`
 
 <br>
