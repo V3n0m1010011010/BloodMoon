@@ -20,15 +20,17 @@ BloodMoon is a custom firmware for the LilyGO T-QT Pro (ESP32-S3), inspired by M
 
 - *nRF24L01 module* (for jamming functionality) Pins can be modified in `settings.h`
 
-
 <br>
 
-### In development:
+### Software Requirements:
 #
-- [ ] display scanned APs/STs - info (SSID, BSSID, Channel)
-- [ ] Multiselecting scanned APs/STs
-- [ ] Deauthentification-attack
-- [ ] Beacon-spamming
+- *board-manager: `esp32` version 2.0.10*
+  
+- *`TFT_eSPI` version 2.5.4* (for t-qt pro copy `User_Setup.h` file in TFT_eSPI folder)
+
+- *`EasyButton` version 2.0.3*
+
+- *`RF24` version 1.4.9*
 
 <br>
 
@@ -39,6 +41,16 @@ BloodMoon is a custom firmware for the LilyGO T-QT Pro (ESP32-S3), inspired by M
   - `build.extra_flags.esp32s3`
 - Add `-zmuldefs` to the following compiler setting for esp32s3
   - `compiler.c.elf.libs.esp32s3`
+
+<br>
+
+
+### In development:
+#
+- [ ] display scanned APs/STs - info (SSID, BSSID, Channel)
+- [ ] Multiselecting scanned APs/STs
+- [ ] Deauthentification-attack
+- [ ] Beacon-spamming
 
 <br>
 
