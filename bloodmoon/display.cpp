@@ -7,7 +7,7 @@
 #include "wifi.h"
 #include "rf24.h"
 #include "menu.h"
-#include "icons.h"
+#include "fonts/icons.h"
 #include "settings.h"
 #include "globals.h"
 #include "variables.h"

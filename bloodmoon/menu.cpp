@@ -1,7 +1,6 @@
 #include <EasyButton.h>
 #include <TFT_eSPI.h>
 #include "menu.h"
-#include "icons.h"
 #include "settings.h"
 #include "globals.h"
 #include "variables.h"
