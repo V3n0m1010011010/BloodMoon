@@ -25,12 +25,14 @@ bool controls::handleInput() {
       if (pressDuration < longPressDuration) {
         if (activem->isScroll()) {
           if (activem->isMenuWithIcon()) dis.renderIconScrollAnimation(true, 20);
+          if(activem->getSectionsSize() > 1 && activem->getType() == "apSelect") dis.renderWifiSelectScrollAnimation(true, 8);
           activem->setSelectedIndex((activem->getSelectedIndex() + 1) % activem->getSectionsSize());
           dis.renderAll();
         }
       } else {
         if (activem->isScroll()) {
           if (activem->isMenuWithIcon()) dis.renderIconScrollAnimation(false, 20);
+          if(activem->getSectionsSize() > 1 && activem->getType() == "apSelect") dis.renderWifiSelectScrollAnimation(false, 8);
           activem->setSelectedIndex((activem->getSelectedIndex() - 1 + activem->getSectionsSize()) % activem->getSectionsSize());
           dis.renderAll();
         }

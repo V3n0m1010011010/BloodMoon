@@ -3,6 +3,7 @@
 #include <string>
 #include <iomanip>
 #include <sstream>
+#include <vector>
 #include "display.h"
 #include "wifi.h"
 #include "rf24.h"
@@ -107,11 +108,11 @@ void display::renderMain() {
   for (int i = scrollOffset; i < std::min(scrollOffset + maxVisibleItems, sectionSize); ++i) {
     int y = 25 + ((i - scrollOffset) * 22);
     if (i == selectedIndex) {
-      tft.fillRect(5, y, 118, 22, tft.color565(50, 0, 0));
-      tft.drawRect(5, y, 118, 22, tft.color565(10, 0, 0));
+      tft.fillRect(5, y, width - 10, 22, tft.color565(50, 0, 0));
+      tft.drawRect(5, y, width - 10, 22, tft.color565(10, 0, 0));
     } else {
-      tft.fillRect(5, y, 118, 22, tft.color565(80, 0, 0));
-      tft.drawRect(5, y, 118, 22, tft.color565(10, 0, 0));
+      tft.fillRect(5, y, width - 10, 22, tft.color565(80, 0, 0));
+      tft.drawRect(5, y, width - 10, 22, tft.color565(10, 0, 0));
     }
     tft.drawString(activem->getSection(i).substr(0, maxTextWidth).c_str(), width / 2, y + 11);
   }
@@ -161,7 +162,7 @@ void display::renderIconScrollAnimation(bool dir, int frames) {
   for (int i = 0; i < frames; i++) {
     int dx = dir ? 128 / frames : -(128 / frames);
     posX -= dx;
-    tft.fillRect(0, 22, 128, 90, TFT_BLACK);
+    tft.fillRect(0, startY, endX, endY - startY, TFT_BLACK);
     tft.setTextSize(3);
     if (currentIconsSet == 1) {
       tft.loadFont(customIcons1);
@@ -196,7 +197,7 @@ void display::renderIconScrollAnimation(bool dir, int frames) {
 void display::renderApScanMenu() {
   setBrightness(0.3);
   renderHead();
-  tft.fillRect(startX, startY, endX, endY, TFT_BLACK);
+  tft.fillRect(startX, startY, endX, endY - startY, TFT_BLACK);
   tft.setTextSize(1);
   tft.setTextDatum(MC_DATUM);
   const int maxVisibleItems = 8;
@@ -217,7 +218,7 @@ void display::renderApScanMenu() {
 void display::renderStScanMenu() {
   setBrightness(0.3);
   renderHead();
-  tft.fillRect(startX, startY, endX, endY, TFT_BLACK);
+  tft.fillRect(startX, startY, endX, endY - startY, TFT_BLACK);
   tft.setTextSize(1);
   const int maxVisibleItems = 8;
   const int maxTextWidth = 15;
@@ -249,29 +250,100 @@ void display::renderStScanMenu() {
 //------------------------------------------------------------------------------------------------
 void display::renderApSelectMenu() {
   renderHead();
-  tft.fillRect(startX, startY, endX, endY, TFT_BLACK);
   int selectedIndex = activem->getSelectedIndex();
+  tft.fillRect(startX, startY, endX, endY, TFT_BLACK);
+  tft.setTextSize(1);
+  tft.setTextFont(2);
   if (selectedIndex == 0) {
-    tft.setTextSize(1);
-    tft.setTextFont(2);
+    tft.fillRoundRect(20, height / 2 - 11, 88, 22, 5, tft.color565(80, 0, 0));
     tft.setTextDatum(MC_DATUM);
     tft.drawString(activem->getSection(0).c_str(), posX, height / 2);
   } else if (Wifi.getFirstScan()[0]) {
-    tft.setTextSize(1);
-    tft.setTextFont(2);
+    const int maxTextWidth = 13;
+    tft.fillRoundRect(startX + 5, startY + 5, endX - 10, endY - startY - 10, 5, tft.color565(80, 0, 0));
+    tft.drawRoundRect(startX + 5, startY + 5, endX - 10, endY - startY - 10, 5, TFT_BLACK);
     tft.setTextDatum(ML_DATUM);
-    auto ap = Wifi.getApList()[selectedIndex];
+    auto ap = Wifi.getApList()[selectedIndex - 1];
     String ssid = ap.ssid;
     std::array<uint8_t, 6> bssid = ap.bssid;
+    std::stringstream bssidString;
+    bssidString << std::hex << std::uppercase << std::setfill('0');
+    for (size_t i = 0; i < bssid.size(); ++i) {
+      bssidString << std::setw(2) << static_cast<int>(bssid[i]);
+      if (i < bssid.size() - 1) {
+        bssidString << ":";
+      }
+    }
     int channel = ap.channel;
     bool isSelected = ap.isSelected;
-    tft.drawString(ssid, -(width / 2) + posX + 5, startY + 5);
+    if (ssid.length() > maxTextWidth) {
+      ssid = ssid.substring(0, maxTextWidth);
+      ssid = ssid + "...";
+    }
+    tft.drawString(ssid.c_str(), -(width / 2) + posX + 10, startY + 15);
+    tft.drawString(bssidString.str().c_str(), -(width / 2) + posX + 10, startY + 30);
   }
   renderFoot();
 }
 void display::renderStSelectMenu() {
 }
 //------------------------------------------------------------------------------------------------
+
+void display::renderWifiSelectScrollAnimation(bool dir, int frames) {
+  int selectedIndex = activem->getSelectedIndex();
+  int sectionSize = activem->getSectionsSize();
+  const int boxWidth = 88;
+  const int boxHeight = 22;
+  const int yCenter = height / 2;
+  const int maxTextWidth = 13;
+  tft.setTextDatum(MC_DATUM);
+  tft.setTextSize(1);
+  tft.setTextFont(2);
+  for (int i = 0; i < frames; i++) {
+    int dx = dir ? 128 / frames : -(128 / frames);
+    posX -= dx;
+    tft.fillRect(0, startY, endX, endY - startY, TFT_BLACK);
+    if (selectedIndex >= 0 && selectedIndex < sectionSize) {
+      int indexes[3] = {
+        (selectedIndex - 1 < 0) ? sectionSize - 1 : selectedIndex - 1,
+        selectedIndex,
+        (selectedIndex + 1 > sectionSize - 1) ? 0 : selectedIndex + 1
+      };
+      for (int j = 0; j < 3; j++) {
+        int currentIndex = indexes[j];
+        int xPos = posX + (j - 1) * width;
+        if (currentIndex == 0) {
+          tft.fillRoundRect(xPos - boxWidth / 2, yCenter - 11, boxWidth, boxHeight, 5, tft.color565(80, 0, 0));
+          tft.drawString(activem->getSection(0).c_str(), xPos, yCenter);
+        } else if (Wifi.getFirstScan()[0]) {
+          auto ap = Wifi.getApList()[currentIndex - 1];
+          String ssid = ap.ssid;
+          std::array<uint8_t, 6> bssid = ap.bssid;
+          std::stringstream bssidString;
+          bssidString << std::hex << std::uppercase << std::setfill('0');
+          for (size_t i = 0; i < bssid.size(); ++i) {
+            bssidString << std::setw(2) << static_cast<int>(bssid[i]);
+            if (i < bssid.size() - 1) {
+              bssidString << ":";
+            }
+          }
+          int channel = ap.channel;
+          bool isSelected = ap.isSelected;
+          if (ssid.length() > maxTextWidth) {
+            ssid = ssid.substring(0, maxTextWidth) + "...";
+          }
+          tft.fillRoundRect(xPos - boxWidth / 2 + 5, startY + 5, endX - 10, endY - startY - 10, 5, tft.color565(80, 0, 0));
+          tft.drawRoundRect(xPos - boxWidth / 2 + 5, startY + 5, endX - 10, endY - startY - 10, 5, TFT_BLACK);
+          tft.setTextDatum(ML_DATUM);
+          tft.drawString(ssid.c_str(), xPos - boxWidth / 2 + 10, startY + 15);
+          tft.drawString(bssidString.str().c_str(), xPos - boxWidth / 2 + 10, startY + 30);
+        }
+      }
+    }
+    delay(30);
+  }
+  posX = width / 2;
+}
 
 //------------------------------------------------------------------------------------------------
 void display::renderDeauthMenu() {

@@ -10,21 +10,12 @@ extern nrf24 nRF24;
 extern display dis;
 extern controls ctr;
 extern wifi Wifi;
-extern "C" int ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3) {
-  return 0;
-}
+
 void attack::deauth() {
   deauthing = true;
   while(deauthing){
 
   }
-}
-uint8_t* attack::createDeauthPacket(uint8_t* bssid) {
-  uint8_t* endPacket = Wifi.deauthPacket;
-  for (int i = 0; i < 6; i++) {
-    endPacket[10 + i] = endPacket[16 + i] = bssid[i];
-  }
-  return endPacket;
 }
 void attack::nRF24Jammer() {
   nRF24Jamming = true;

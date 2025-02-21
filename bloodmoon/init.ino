@@ -125,7 +125,7 @@ void wifiScanMenu() {
 void wifiScanApMenu() {
   wifiScanApsm = new Menu("scan", "Scanning", false);
   wifiScanApsm->addSection("Back", '\0', []() {
-    Wifi.stopScan();
+    Wifi.stopWifiScan();
     activem = wifiScanApsm->getParentMenu();
     dis.renderAll();
   });
@@ -133,7 +133,7 @@ void wifiScanApMenu() {
 void wifiScanStMenu() {
   wifiScanStsm = new Menu("scan", "Scanning", false);
   wifiScanStsm->addSection("Back", '\0', []() {
-    Wifi.stopScan();
+    Wifi.stopWifiScan();
     activem = wifiScanStsm->getParentMenu();
     dis.renderAll();
   });
@@ -208,9 +208,10 @@ void wifiGeneralSelectApMenu() {
     activem = wifiGeneralSelectApm->getParentMenu();
     dis.renderAll();
   });
-  Serial.println(Wifi.getApList().size());
-  for (auto& i : Wifi.getApList()) {
-    wifiGeneralSelectApm->addSection(i.ssid.c_str(), '\0');
+  auto list = Wifi.getApList();
+  Serial.println(list.size());
+  for (int i = 0; i < list.size(); i++) {
+    wifiGeneralSelectApm->addSection(list[i].ssid.c_str(), '\0');
   }
   wifiGeneralSelectm->setSubMenu(wifiGeneralSelectApm);
 }

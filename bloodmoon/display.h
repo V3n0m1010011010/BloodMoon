@@ -23,6 +23,7 @@ public:
   virtual void renderStScanMenu();
   virtual void renderApSelectMenu();
   virtual void renderStSelectMenu();
+  virtual void renderWifiSelectScrollAnimation(bool dir, int frames);
   virtual void renderDeauthMenu();
   virtual void renderMonitorMenu();
   virtual void renderNRFJammer();

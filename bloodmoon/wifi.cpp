@@ -3,13 +3,25 @@
 #include "wifi.h"
 #include "Menu.h"
 #include "display.h"
+
+
 extern Menu* activem;
 extern display dis;
 wifi* wifi::instance = nullptr;
+
+
+
 void wifi::init() {
   instance = this;
   WiFi.mode(WIFI_STA);
 }
+
+
+
+//------------------------------------------------------------------------
+//          Scan Wifi Acesspoints by recieving beacon frames
+//------------------------------------------------------------------------
+
 void wifi::scanAps() {
   scanAp = true;
   firstApScan = true;
@@ -18,25 +30,16 @@ void wifi::scanAps() {
   wifi_promiscuous_filter_t filter = {
     .filter_mask = WIFI_PROMIS_FILTER_MASK_MGMT
   };
+  esp_timer_create_args_t timerArgs = {
+    .callback = &channelHopCallback,
+    .arg = this,
+    .name = "channel_hop"
+  };
+  ESP_ERROR_CHECK(esp_timer_create(&timerArgs, &channelHopperTimer));
+  ESP_ERROR_CHECK(esp_timer_start_periodic(channelHopperTimer, 200000));
   esp_wifi_set_promiscuous_filter(&filter);
   esp_wifi_set_promiscuous_rx_cb(&beaconCallbackAp);
   esp_wifi_set_promiscuous(true);
-}
-void wifi::scanSts() {
-  scanSt = true;
-  firstApScan = true;
-  stList.clear();
-  wifi_promiscuous_filter_t filter = {
-    .filter_mask = WIFI_PROMIS_FILTER_MASK_DATA | WIFI_PROMIS_FILTER_MASK_MGMT
-  };
-  esp_wifi_set_promiscuous_filter(&filter);
-  esp_wifi_set_promiscuous_rx_cb(&beaconCallbackSt);
-  esp_wifi_set_promiscuous(true);
-}
-void wifi::stopScan() {
-  scanAp = false;
-  scanSt = false;
-  esp_wifi_set_promiscuous(false);
 }
 void wifi::beaconCallbackAp(void* buf, wifi_promiscuous_pkt_type_t type) {
   if (type != WIFI_PKT_MGMT) return;
@@ -66,6 +69,33 @@ void wifi::beaconCallbackAp(void* buf, wifi_promiscuous_pkt_type_t type) {
     dis.renderApScanMenu();
   }
 }
+//------------------------------------------------------------------------
+
+
+
+
+
+//------------------------------------------------------------------------
+//          Scan Wifi Stations by recieving beacon frames
+//------------------------------------------------------------------------
+void wifi::scanSts() {
+  scanSt = true;
+  firstApScan = true;
+  stList.clear();
+  wifi_promiscuous_filter_t filter = {
+    .filter_mask = WIFI_PROMIS_FILTER_MASK_DATA | WIFI_PROMIS_FILTER_MASK_MGMT
+  };
+  esp_timer_create_args_t timerArgs = {
+    .callback = &channelHopCallback,
+    .arg = this,
+    .name = "channel_hop"
+  };
+  ESP_ERROR_CHECK(esp_timer_create(&timerArgs, &channelHopperTimer));
+  ESP_ERROR_CHECK(esp_timer_start_periodic(channelHopperTimer, 200000));
+  esp_wifi_set_promiscuous_filter(&filter);
+  esp_wifi_set_promiscuous_rx_cb(&beaconCallbackSt);
+  esp_wifi_set_promiscuous(true);
+}
 void wifi::beaconCallbackSt(void* buf, wifi_promiscuous_pkt_type_t type) {
   if (!instance || !instance->scanSt) return;
   auto* sniffer = (wifi_promiscuous_pkt_t*)buf;
@@ -75,11 +105,11 @@ void wifi::beaconCallbackSt(void* buf, wifi_promiscuous_pkt_type_t type) {
   newSt.channel = ctrl->channel;
   newSt.rssi = ctrl->rssi;
   if (type == WIFI_PKT_DATA) {
-    memcpy(newSt.mac.data(), frame + 4, 6);                // Source MAC (Client)
-    memcpy(newSt.bssid.data(), frame + 16, 6);             // BSSID (AP)
-  } else if (type == WIFI_PKT_MGMT && frame[0] == 0x40) {  // Probe Request
-    memcpy(newSt.mac.data(), frame + 10, 6);               // Client MAC
-    memset(newSt.bssid.data(), 0, 6);                      // Kein BSSID
+    memcpy(newSt.mac.data(), frame + 4, 6);
+    memcpy(newSt.bssid.data(), frame + 16, 6);
+  } else if (type == WIFI_PKT_MGMT && frame[0] == 0x40) {
+    memcpy(newSt.mac.data(), frame + 10, 6);
+    memset(newSt.bssid.data(), 0, 6);
   }
   newSt.isSelected = false;
   std::lock_guard<std::mutex> lock(instance->stMutex);
@@ -95,6 +125,29 @@ void wifi::beaconCallbackSt(void* buf, wifi_promiscuous_pkt_type_t type) {
     dis.renderStScanMenu();
   }
 }
+//------------------------------------------------------------------------
+
+
+
+//------------------------------------------------------------------------
+//                          stop any wifi scan
+//------------------------------------------------------------------------
+void wifi::stopWifiScan() {
+  scanAp = false;
+  scanSt = false;
+  esp_timer_stop(channelHopperTimer);
+  esp_timer_delete(channelHopperTimer);
+  esp_wifi_set_promiscuous(false);
+}
+//------------------------------------------------------------------------
+
+
+
+
+
+//------------------------------------------------------------------------
+//                Scan packet trafic thanks to @SpaceHuhn
+//------------------------------------------------------------------------
 void wifi::packetSniffer(uint8_t* buf, uint16_t len) {
 }
 double wifi::getMultiplicator(long maxRow, long LineVal) {
@@ -107,6 +160,42 @@ double wifi::getMultiplicator(long maxRow, long LineVal) {
 }
 void wifi::packetMonitor() {
 }
+//------------------------------------------------------------------------
+
+
+
+
+
+
+
+//------------------------------------------------------------------------
+//                      packets production section
+//
+//
+//
+//  bypass for sanity check
+//  makes sending deauthentification frames possible
+
+extern "C" int ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3) {
+  return 0;
+}
+
+//------------------------------------------------------------------------
+
+uint8_t* wifi::createDeauthPacket(uint8_t* bssid) {
+  uint8_t* endPacket = deauthPacket;
+  for (int i = 0; i < 6; i++) {
+    endPacket[10 + i] = endPacket[16 + i] = bssid[i];
+  }
+  return endPacket;
+}
+
+//------------------------------------------------------------------------
+
+
+
+
+
 std::vector<AccessPoint> wifi::getApList() {
   return apList;
 }
@@ -114,9 +203,9 @@ std::vector<Station> wifi::getStList() {
   return stList;
 }
 void wifi::setScanStatus(int i, bool status) {
-  if(i == 0){
+  if (i == 0) {
     scanAp = false;
-  }else if(i == 1){
+  } else if (i == 1) {
     scanSt = false;
   }
 }

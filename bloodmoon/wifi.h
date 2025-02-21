@@ -1,4 +1,5 @@
 #include <WiFi.h>
+#include "esp_wifi.h"
 #include <algorithm>
 #include <vector>
 #include <string>
@@ -40,6 +41,17 @@ private:
   unsigned long maxVal = 0;
   double multiplicator = 0.0;
   unsigned int val[128];
+  int currentChannel = 1;
+  esp_timer_handle_t channelHopperTimer;
+  static constexpr int MAX_CHANNEL = 13;
+  static void channelHopCallback(void* arg) {
+    wifi* self = static_cast<wifi*>(arg);
+    self->currentChannel++;
+    if (self->currentChannel > MAX_CHANNEL) {
+      self->currentChannel = 1;
+    }
+    esp_wifi_set_channel(self->currentChannel, WIFI_SECOND_CHAN_NONE);
+  }
 public:
   uint8_t deauthPacket[26] = {
     /*  0 - 1  */ 0xC0, 0x00,
@@ -53,12 +65,13 @@ public:
   void init();
   void scanAps();
   void scanSts();
-  void stopScan();
+  void stopWifiScan();
   static void beaconCallbackAp(void* buf, wifi_promiscuous_pkt_type_t type);
   static void beaconCallbackSt(void* buf, wifi_promiscuous_pkt_type_t type);
   void packetSniffer(uint8_t* buf, uint16_t len);
   double getMultiplicator(long maxRow, long LineVal);
   void packetMonitor();
+  uint8_t* createDeauthPacket(uint8_t* bssid);
   std::vector<AccessPoint> getApList();
   std::vector<Station> getStList();
   void setScanStatus(int i, bool status);
