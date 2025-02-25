@@ -85,3 +85,9 @@ void Menu::executeAction(int i) {
 void Menu::setScroll(bool scroll) {
   isScrollable = scroll;
 }
+void Menu::setRenderState(bool state){
+  needsRender = state;
+}
+bool Menu::getRenderState(){
+  return needsRender;
+}

@@ -12,12 +12,14 @@ void controls::init() {
   sel.begin();
 }
 bool controls::handleInput() {
+  bool inputDetected = false;
   mov.read();
   if (mov.isPressed() && pressStartTime == 0) {
     pressStartTime = millis();
     movWasPressed = true;
   }
   if (mov.isReleased() && movWasPressed) {
+    inputDetected = true;
     lastActivityTime = millis();
     unsigned long pressDuration = millis() - pressStartTime;
     dis.turn();
@@ -27,14 +29,14 @@ bool controls::handleInput() {
           if (activem->isMenuWithIcon()) dis.renderIconScrollAnimation(true, 20);
           if(activem->getSectionsSize() > 1 && activem->getType() == "apSelect") dis.renderWifiSelectScrollAnimation(true, 8);
           activem->setSelectedIndex((activem->getSelectedIndex() + 1) % activem->getSectionsSize());
-          dis.renderAll();
+          activem->setRenderState(true);
         }
       } else {
         if (activem->isScroll()) {
           if (activem->isMenuWithIcon()) dis.renderIconScrollAnimation(false, 20);
           if(activem->getSectionsSize() > 1 && activem->getType() == "apSelect") dis.renderWifiSelectScrollAnimation(false, 8);
           activem->setSelectedIndex((activem->getSelectedIndex() - 1 + activem->getSectionsSize()) % activem->getSectionsSize());
-          dis.renderAll();
+          activem->setRenderState(true);
         }
       }
     } else {
@@ -49,6 +51,7 @@ bool controls::handleInput() {
     selWasPressed = true;
   }
   if (sel.isReleased() && selWasPressed) {
+    inputDetected = true;
     lastActivityTime = millis();
     dis.turn();
     selWasPressed = false;
@@ -59,5 +62,6 @@ bool controls::handleInput() {
       displayNormal = true;
     }
   }
-  return false;
+  Serial.println(activem->getType());
+  return inputDetected;
 }

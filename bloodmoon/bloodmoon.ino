@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <esp_system.h>
 #include <TFT_eSPI.h>
 #include <SPI.h>
 #include <vector>
@@ -26,5 +27,8 @@ void setup() {
 
 void loop() {
   dis.turn();
+  if(activem->getRenderState()){
+    dis.renderAll();
+  }
   ctr.handleInput();
 }

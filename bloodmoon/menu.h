@@ -22,6 +22,7 @@ private:
   std::vector<bool> selectedList;
   Menu* subMenu = nullptr;
   Menu* parentMenu = nullptr;
+  bool needsRender = false;
 
 public:
   Menu(String type, const std::string& title, bool isScrollable, std::function<void()> aDown = nullptr, std::function<void()> aUp = nullptr, bool menuWithIcon = false);
@@ -54,6 +55,9 @@ public:
   int getSectionsSize();
   void executeAction(int i);
   void setScroll(bool scroll);
+
+  void setRenderState(bool state);
+  bool getRenderState();
 };
 
 #endif

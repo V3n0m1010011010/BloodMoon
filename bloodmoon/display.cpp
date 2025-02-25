@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include "display.h"
+#include "controls.h"
 #include "wifi.h"
 #include "rf24.h"
 #include "menu.h"
@@ -14,10 +15,15 @@
 #include "variables.h"
 #include "images/images.h"
 
-extern wifi Wifi;
-extern Menu* activem;
+
+
 extern TFT_eSPI tft;
+extern Menu* activem;
+extern controls ctr;
+extern wifi Wifi;
 extern nrf24 nRF24;
+
+
 
 display::display(int startX, int startY, int endX, int endY)
   : startX(startX), startY(startY), endX(endX), endY(endY) {
@@ -25,16 +31,31 @@ display::display(int startX, int startY, int endX, int endY)
   ledcAttachPin(backlightPin, pwmChannel);
   posX = width / 2;
 }
+
+
+
+
+
 //------------------------------------------------------------------------------------------------
-void display::renderBoot() {  // Render boot sequence
-  tft.fillScreen(TFT_BLACK);
-  tft.drawBitmap(width / 4, height / 4 - 10, ghost, 64, 64, TFT_WHITE);
-  tft.setTextDatum(MC_DATUM);
-  tft.setTextSize(1);
-  tft.setTextFont(2);
-  tft.setTextColor(TFT_WHITE);
-  tft.drawString("BloodMoon", width / 2, 100);
-  delay(2000);
+//                              Render boot sequence
+//------------------------------------------------------------------------------------------------
+
+void display::renderBoot() {
+  for (int i = 0; i < 15; i++) {
+    int dy = -(128 / 15) * i;
+    tft.fillScreen(TFT_BLACK);
+    tft.drawBitmap(width / 4, height / 4 - 10 + dy, ghost, 64, 64, TFT_WHITE);
+    tft.setTextDatum(MC_DATUM);
+    tft.setTextSize(1);
+    tft.setTextFont(2);
+    tft.setTextColor(TFT_WHITE);
+    tft.drawString("BloodMoon", width / 2, 100 + dy);
+    tft.drawString("Firmware", width / 2, 128 / 3 + height + dy);
+    tft.drawString("by", width / 2, height / 2 + height + dy);
+    tft.drawString("V3n0m1010011010", width / 2, (128 / 3) * 2 + height + dy);
+    if (i == 0) delay(2000);
+    else delay(20);
+  }
   tft.fillScreen(TFT_BLACK);
   tft.drawString("Firmware", width / 2, 128 / 3);
   tft.drawString("by", width / 2, height / 2);
@@ -54,9 +75,18 @@ void display::renderBoot() {  // Render boot sequence
   delay(1000);
   tft.unloadFont();
 }
-//------------------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                                   Render default menu head
+//------------------------------------------------------------------------------------------------
+
 void display::renderHead() {
   tft.setTextFont(0);
   tft.fillRect(0, 0, 128, 22, tft.color565(161, 0, 0));
@@ -66,29 +96,19 @@ void display::renderHead() {
   tft.setTextDatum(MC_DATUM);
   tft.drawString(activem->getTitle().c_str(), width / 2, 11);
 }
-void display::renderMainWithIcon() {
-  int selectedIndex = activem->getSelectedIndex();
-  std::string section = activem->getSection(selectedIndex);
-  int sectionSize = activem->getSectionsSize();
-  int iconSize = activem->getIconsSize();
-  tft.setTextDatum(MC_DATUM);
-  tft.setTextSize(3);
-  if (currentIconsSet == 1) {
-    tft.loadFont(customIcons1);
-  } else if (currentIconsSet == 2) {
-    tft.loadFont(customIcons2);
-  }
-  if (selectedIndex >= 0 && selectedIndex < iconSize) {
-    char currentIcon = activem->getIcon(selectedIndex);
-    tft.drawString(String(currentIcon), width / 2, height / 2 - 8);
-    tft.unloadFont();
-    tft.setTextSize(1);
-    tft.setTextFont(2);
-    tft.drawString(section.c_str(), width / 2, height / 2 + 27);
-    tft.drawChar('<', 20, 62);
-    tft.drawChar('>', 128 - 25, 62);
-  }
-}
+
+//------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                                  Render default Main menu part
+//------------------------------------------------------------------------------------------------
+
 void display::renderMain() {
   int selectedIndex = activem->getSelectedIndex();
   std::string section = activem->getSection(selectedIndex);
@@ -127,6 +147,52 @@ void display::renderMain() {
     tft.setTextFont(2);
   }
 }
+
+//------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                              Render main menu with icons
+//------------------------------------------------------------------------------------------------
+
+void display::renderMainWithIcon() {
+  int selectedIndex = activem->getSelectedIndex();
+  std::string section = activem->getSection(selectedIndex);
+  int sectionSize = activem->getSectionsSize();
+  int iconSize = activem->getIconsSize();
+  tft.setTextDatum(MC_DATUM);
+  tft.setTextSize(3);
+  if (currentIconsSet == 1) {
+    tft.loadFont(customIcons1);
+  } else if (currentIconsSet == 2) {
+    tft.loadFont(customIcons2);
+  }
+  if (selectedIndex >= 0 && selectedIndex < iconSize) {
+    char currentIcon = activem->getIcon(selectedIndex);
+    tft.drawString(String(currentIcon), width / 2, height / 2 - 8);
+    tft.unloadFont();
+    tft.setTextSize(1);
+    tft.setTextFont(2);
+    tft.drawString(section.c_str(), width / 2, height / 2 + 27);
+    tft.drawChar('<', 20, 62);
+    tft.drawChar('>', 128 - 25, 62);
+  }
+}
+
+//------------------------------------------------------------------------------------------------
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                              Render default menu foot
+//------------------------------------------------------------------------------------------------
+
 void display::renderFoot() {
   tft.setTextFont(2);
   tft.setTextSize(1);
@@ -135,23 +201,52 @@ void display::renderFoot() {
   tft.drawString("Sel", 5, 128 - 8);
   tft.drawString("Mov", 98, 128 - 8);
 }
+
+//------------------------------------------------------------------------------------------------
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                    Render all menu parts according to menu type
+//------------------------------------------------------------------------------------------------
+
 void display::renderAll() {
+  activem->setRenderState(false);
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE);
-  if (activem->getType() == "normal" || activem->getType() == "scan" || activem->getType() == "deauther" || activem->getType() == "jammer") {
+  String type = activem->getType();
+  if ("normal") {
     if (activem->isMenuWithIcon()) {
       renderMainWithIcon();
     } else {
       renderMain();
     }
-  } else if (activem->getType() == "apSelect") {
+  } else if (type == "scanAp") {
+    renderApScanMenu();
+  } else if (type == "scanSt") {
+    renderStScanMenu();
+  } else if (type == "jammer") {
+    renderNRFJammer();
+  } else if (type == "apSelect") {
     renderApSelectMenu();
-  } else if (activem->getType() == "stSelect") {
+  } else if (type == "stSelect") {
     renderStSelectMenu();
   }
   renderHead();
   renderFoot();
 }
+
+//------------------------------------------------------------------------------------------------
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                        Render Scroll animation for menu with icons
+//------------------------------------------------------------------------------------------------
 
 void display::renderIconScrollAnimation(bool dir, int frames) {
   int selectedIndex = activem->getSelectedIndex();
@@ -193,12 +288,20 @@ void display::renderIconScrollAnimation(bool dir, int frames) {
 }
 //------------------------------------------------------------------------------------------------
 
+
+
+
+
+
 //------------------------------------------------------------------------------------------------
+//                              Render scan sequenze for aps
+//------------------------------------------------------------------------------------------------
+
 void display::renderApScanMenu() {
   setBrightness(0.3);
-  renderHead();
   tft.fillRect(startX, startY, endX, endY - startY, TFT_BLACK);
   tft.setTextSize(1);
+  tft.setTextFont(1);
   tft.setTextDatum(MC_DATUM);
   const int maxVisibleItems = 8;
   const int maxTextWidth = 15;
@@ -213,8 +316,18 @@ void display::renderApScanMenu() {
     int y = startY + 10 + ((i - scrollOffset) * 10);
     tft.drawString(Wifi.getApList()[i].ssid.substring(0, maxTextWidth).c_str(), width / 2, y);
   }
-  renderFoot();
 }
+
+//------------------------------------------------------------------------------------------------
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                              Render scan sequenze for sts
+//------------------------------------------------------------------------------------------------
+
 void display::renderStScanMenu() {
   setBrightness(0.3);
   renderHead();
@@ -247,22 +360,27 @@ void display::renderStScanMenu() {
 }
 //------------------------------------------------------------------------------------------------
 
+
+
+
+
 //------------------------------------------------------------------------------------------------
+//                              Render select menu for aps
+//------------------------------------------------------------------------------------------------
+
 void display::renderApSelectMenu() {
-  renderHead();
   int selectedIndex = activem->getSelectedIndex();
   tft.fillRect(startX, startY, endX, endY, TFT_BLACK);
   tft.setTextSize(1);
   tft.setTextFont(2);
+  renderHead();
+  renderFoot();
   if (selectedIndex == 0) {
     tft.fillRoundRect(20, height / 2 - 11, 88, 22, 5, tft.color565(80, 0, 0));
     tft.setTextDatum(MC_DATUM);
     tft.drawString(activem->getSection(0).c_str(), posX, height / 2);
   } else if (Wifi.getFirstScan()[0]) {
-    const int maxTextWidth = 13;
-    tft.fillRoundRect(startX + 5, startY + 5, endX - 10, endY - startY - 10, 5, tft.color565(80, 0, 0));
-    tft.drawRoundRect(startX + 5, startY + 5, endX - 10, endY - startY - 10, 5, TFT_BLACK);
-    tft.setTextDatum(ML_DATUM);
+    const int maxTextWidth = 6;
     auto ap = Wifi.getApList()[selectedIndex - 1];
     String ssid = ap.ssid;
     std::array<uint8_t, 6> bssid = ap.bssid;
@@ -276,17 +394,61 @@ void display::renderApSelectMenu() {
     }
     int channel = ap.channel;
     bool isSelected = ap.isSelected;
-    if (ssid.length() > maxTextWidth) {
-      ssid = ssid.substring(0, maxTextWidth);
-      ssid = ssid + "...";
+    tft.fillRoundRect(startX + 5, startY + 5, endX - 10, endY - startY - 10, 5, tft.color565(80, 0, 0));
+    tft.fillRoundRect(startX + 10, startY + 10, endX - 20, 20, 5, tft.color565(40, 0, 0));
+    tft.setTextDatum(ML_DATUM);
+    tft.drawString("SSID:", 18, startY + 20);
+    tft.drawString(ssid.c_str(), 55, startY + 20);
+    while (!ctr.handleInput()) {
     }
-    tft.drawString(ssid.c_str(), -(width / 2) + posX + 10, startY + 15);
-    tft.drawString(bssidString.str().c_str(), -(width / 2) + posX + 10, startY + 30);
+    // tft.drawString(bssidString.str().c_str(), -(width / 2) + posX + 10, startY + 30);
   }
-  renderFoot();
 }
+
+//------------------------------------------------------------------------------------------------
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                              Render ap select scroll animation
+//------------------------------------------------------------------------------------------------
+
+void display::renderApSelectMenuScrollAni() {
+  static double lastRenderTime = 0;
+  const double renderDelay = 300;
+  double now = millis();
+  int indexSSID = 0;
+  if (now - lastRenderTime > renderDelay) {
+    lastRenderTime = now;
+    // tft.fillRoundRect(startX + 10, startY + 10, endX - 20, 20, 5, tft.color565(40, 0, 0));
+    // tft.setTextDatum(ML_DATUM);
+    // tft.drawString("SSID:", 18, startY + 20);
+    // tft.drawString(ssid.c_str(), 55, startY + 20);
+  }
+}
+//------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                              Render select menu for sts
+//------------------------------------------------------------------------------------------------
+
 void display::renderStSelectMenu() {
 }
+
+//------------------------------------------------------------------------------------------------
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                          Render scroll animation for wifi select menu
 //------------------------------------------------------------------------------------------------
 
 void display::renderWifiSelectScrollAnimation(bool dir, int frames) {
@@ -299,6 +461,7 @@ void display::renderWifiSelectScrollAnimation(bool dir, int frames) {
   tft.setTextDatum(MC_DATUM);
   tft.setTextSize(1);
   tft.setTextFont(2);
+
   for (int i = 0; i < frames; i++) {
     int dx = dir ? 128 / frames : -(128 / frames);
     posX -= dx;
@@ -316,36 +479,45 @@ void display::renderWifiSelectScrollAnimation(bool dir, int frames) {
           tft.fillRoundRect(xPos - boxWidth / 2, yCenter - 11, boxWidth, boxHeight, 5, tft.color565(80, 0, 0));
           tft.drawString(activem->getSection(0).c_str(), xPos, yCenter);
         } else if (Wifi.getFirstScan()[0]) {
-          auto ap = Wifi.getApList()[currentIndex - 1];
-          String ssid = ap.ssid;
-          std::array<uint8_t, 6> bssid = ap.bssid;
-          std::stringstream bssidString;
-          bssidString << std::hex << std::uppercase << std::setfill('0');
-          for (size_t i = 0; i < bssid.size(); ++i) {
-            bssidString << std::setw(2) << static_cast<int>(bssid[i]);
-            if (i < bssid.size() - 1) {
-              bssidString << ":";
-            }
-          }
-          int channel = ap.channel;
-          bool isSelected = ap.isSelected;
-          if (ssid.length() > maxTextWidth) {
-            ssid = ssid.substring(0, maxTextWidth) + "...";
-          }
-          tft.fillRoundRect(xPos - boxWidth / 2 + 5, startY + 5, endX - 10, endY - startY - 10, 5, tft.color565(80, 0, 0));
-          tft.drawRoundRect(xPos - boxWidth / 2 + 5, startY + 5, endX - 10, endY - startY - 10, 5, TFT_BLACK);
-          tft.setTextDatum(ML_DATUM);
-          tft.drawString(ssid.c_str(), xPos - boxWidth / 2 + 10, startY + 15);
-          tft.drawString(bssidString.str().c_str(), xPos - boxWidth / 2 + 10, startY + 30);
+          tft.fillCircle(xPos - boxWidth / 2, height / 2, 20, tft.color565(80, 0, 0));
         }
       }
     }
     delay(30);
   }
+  int pos = 5;
+  // for (int j = 0; j < 5; j++) {
+  //   tft.fillRect(0, startY, endX, endY - startY, TFT_BLACK);
+  //   tft.drawRoundRect()
+  // }
+  if (selectedIndex != 0) {
+    int startRadius = 20;
+    int framesAfter = 10;
+    int endWidth = 118, endHeight = endY - startY - 10, endCornerRadius = 5;
+    for (int i = 0; i < framesAfter; i++) {
+      float progress = (float)i / (framesAfter - 1);
+      int widthRect = (int)map(i, 0, framesAfter, 20, endWidth);
+      int heightRect = (int)map(i, 0, framesAfter, 20, endHeight);
+      int cornerRadius = (int)map(i, 0, framesAfter, 20, 5);
+      int x = width / 2 - widthRect / 2;
+      int y = height / 2 - heightRect / 2;
+      tft.fillRect(0, startY, endX, endY - startY, TFT_BLACK);
+      tft.drawRoundRect(x, y, width, height, cornerRadius, tft.color565(80, 0, 0));
+      delay(100);
+    }
+  }
   posX = width / 2;
 }
 
 //------------------------------------------------------------------------------------------------
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                              Render deauthing sequenze
+//------------------------------------------------------------------------------------------------
+
 void display::renderDeauthMenu() {
   renderHead();
 
@@ -361,14 +533,31 @@ void display::renderNRFJammer() {
   tft.drawString("press sel to stop", startX + 10, startY + 25);
   renderFoot();
 }
-//------------------------------------------------------------------------------------------------
+
+void display::renderNRFError() {
+  tft.fillRoundRect(width / 2 - 60, height / 2 - 10, 60 * 2, 20, 5, tft.color565(80, 0, 0));
+  tft.setTextDatum(MC_DATUM);
+  tft.drawString("nRF24 not found", width / 2, height / 2);
+  delay(1000);
+  renderAll();
+}
 
 //------------------------------------------------------------------------------------------------
+
+
+
+
+
+//------------------------------------------------------------------------------------------------
+//                              Render packet-monitor
+//------------------------------------------------------------------------------------------------
+
 void display::renderMonitorMenu() {
   renderHead();
 
   renderFoot();
 }
+
 //------------------------------------------------------------------------------------------------
 
 
@@ -377,18 +566,44 @@ void display::setBrightness(float brightness) {
   ledcWrite(0, x);
 }
 void display::turnOn() {
-  digitalWrite(10, HIGH);
+  ledcAttachPin(backlightPin, pwmChannel);
+  ledcWrite(0, 0.3);
 }
 void display::turnOff() {
-  digitalWrite(10, LOW);
+  ledcDetachPin(backlightPin);
+  pinMode(backlightPin, OUTPUT);
+  digitalWrite(backlightPin, HIGH);
 }
 void display::turn() {
   if (millis() - lastActivityTime > displayFade && millis() - lastActivityTime < displayTimeOut) {
     setBrightness(0.8);
   } else if (millis() - lastActivityTime > displayTimeOut) {
     displayNormal = false;
-    setBrightness(1);
+    // setBrightness(1);
+    turnOff();
   } else {
-    setBrightness(0.3);
+    turnOn();
   }
+}
+
+
+String display::stringShifter(const String& input, int offset, int maxWidth) {
+  if (input.length() <= maxWidth) return input;
+  String result;
+  int effectiveLength = input.length() + 3;
+  int virtualPos = offset % effectiveLength;
+  if (virtualPos <= input.length()) {
+    int endPos = virtualPos + maxWidth;
+    if (endPos > input.length()) {
+      result = input.substring(virtualPos);
+      result += "...";
+      result = result.substring(0, maxWidth);
+    } else {
+      result = input.substring(virtualPos, endPos);
+      if (endPos < input.length()) result += "...";
+    }
+  } else {
+    result = input.substring(0, maxWidth);
+  }
+  return result;
 }

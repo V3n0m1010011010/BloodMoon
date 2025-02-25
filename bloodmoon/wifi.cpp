@@ -59,7 +59,7 @@ void wifi::beaconCallbackAp(void* buf, wifi_promiscuous_pkt_type_t type) {
       break;
     }
   }
-  if (!exists) {
+  if (!exists && ssid != "") {
     AccessPoint newAp;
     newAp.ssid = ssid;
     memcpy(newAp.bssid.data(), bssid, 6);
