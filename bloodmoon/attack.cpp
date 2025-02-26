@@ -23,6 +23,7 @@ void attack::nRF24Jammer() {
   while (nRF24Jamming) {
     for (int j = 0; j < sizeof(hopping_channel); j++) {
       nRF24.changeChannel(hopping_channel[j]);
+      dis.turn();
       if (ctr.handleInput()) {
         break;
       }
