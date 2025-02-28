@@ -42,7 +42,7 @@ display::display(int startX, int startY, int endX, int endY)
 
 void display::renderBoot() {
   for (int i = 0; i < 15; i++) {
-    int dy = -(128 / 15) * i;
+    int dy = -(height / 15) * i;
     tft.fillScreen(TFT_BLACK);
     tft.drawBitmap(width / 4, height / 4 - 10 + dy, ghost, 64, 64, TFT_WHITE);
     tft.setTextDatum(MC_DATUM);
@@ -50,16 +50,16 @@ void display::renderBoot() {
     tft.setTextFont(2);
     tft.setTextColor(TFT_WHITE);
     tft.drawString("BloodMoon", width / 2, 100 + dy);
-    tft.drawString("Firmware", width / 2, 128 / 3 + height + dy);
+    tft.drawString("Firmware", width / 2, height / 2 - 20 + height + dy);
     tft.drawString("by", width / 2, height / 2 + height + dy);
-    tft.drawString("V3n0m1010011010", width / 2, (128 / 3) * 2 + height + dy);
+    tft.drawString("V3n0m1010011010", width / 2, height / 2 + 20 + height + dy);
     if (i == 0) delay(2000);
     else delay(20);
   }
   tft.fillScreen(TFT_BLACK);
-  tft.drawString("Firmware", width / 2, 128 / 3);
+  tft.drawString("Firmware", width / 2, height / 2 - 20);
   tft.drawString("by", width / 2, height / 2);
-  tft.drawString("V3n0m1010011010", width / 2, (128 / 3) * 2);
+  tft.drawString("V3n0m1010011010", width / 2, height / 2 + 20);
   delay(1000);
   tft.setTextDatum(ML_DATUM);
   tft.fillScreen(TFT_BLACK);
@@ -89,9 +89,9 @@ void display::renderBoot() {
 
 void display::renderHead() {
   tft.setTextFont(0);
-  tft.fillRect(0, 0, 128, 22, tft.color565(161, 0, 0));
-  tft.drawRect(0, 0, 128, 22, tft.color565(255, 255, 255));
-  tft.fillRect(5, 0, 128 - 5 * 2, 22, tft.color565(161, 0, 0));
+  tft.fillRect(0, 0, width, 22, tft.color565(161, 0, 0));
+  tft.drawRect(0, 0, width, 22, tft.color565(255, 255, 255));
+  tft.fillRect(5, 0, width - 5 * 2, 22, tft.color565(161, 0, 0));
   tft.setTextSize(2);
   tft.setTextDatum(MC_DATUM);
   tft.drawString(activem->getTitle().c_str(), width / 2, 11);
@@ -178,8 +178,12 @@ void display::renderMainWithIcon() {
     tft.setTextSize(1);
     tft.setTextFont(2);
     tft.drawString(section.c_str(), width / 2, height / 2 + 27);
-    tft.drawChar('<', 20, 62);
-    tft.drawChar('>', 128 - 25, 62);
+    // tft.drawChar('<', 20, 62);
+    // tft.setTextDatum(MR_DATUM);
+    tft.drawString("<", width / 5, height / 2 + 8);
+    // tft.setTextDatum(ML_DATUM);
+    tft.drawString(">", (width / 5) * 4, height / 2 + 8);
+    // tft.drawChar('>', 128 - 25, 62);
   }
 }
 
@@ -197,9 +201,9 @@ void display::renderFoot() {
   tft.setTextFont(2);
   tft.setTextSize(1);
   tft.setTextDatum(ML_DATUM);
-  tft.fillRect(0, 112, 128, 16, tft.color565(161, 0, 0));
-  tft.drawString("Sel", 5, 128 - 8);
-  tft.drawString("Mov", 98, 128 - 8);
+  tft.fillRect(0, height - 16, width, 16, tft.color565(161, 0, 0));
+  tft.drawString("Sel", 5, height - 8);
+  tft.drawString("Mov", width - 30, height - 8);
 }
 
 //------------------------------------------------------------------------------------------------
@@ -216,12 +220,22 @@ void display::renderAll() {
   activem->setRenderState(false);
   tft.fillScreen(TFT_BLACK);
   tft.setTextColor(TFT_WHITE);
+  renderHead();
+  renderFoot();
   String type = activem->getType();
   if ("normal") {
-    if (activem->isMenuWithIcon()) {
-      renderMainWithIcon();
+    if (lastSelectedIndex == activem->getSelectedIndex()) {
+      if (activem->isMenuWithIcon()) {
+        renderMainWithIcon();
+      } else {
+        renderMain();
+      }
     } else {
-      renderMain();
+      if (activem->isMenuWithIcon()) {
+        renderIconScrollAnimation(scrollDirection, 20);
+      }
+      lastSelectedIndex = activem->getSelectedIndex();
+      activem->setRenderState(true);
     }
   } else if (type == "scanAp") {
     renderApScanMenu();
@@ -234,8 +248,6 @@ void display::renderAll() {
   } else if (type == "stSelect") {
     renderStSelectMenu();
   }
-  renderHead();
-  renderFoot();
 }
 
 //------------------------------------------------------------------------------------------------
@@ -249,13 +261,13 @@ void display::renderAll() {
 //------------------------------------------------------------------------------------------------
 
 void display::renderIconScrollAnimation(bool dir, int frames) {
-  int selectedIndex = activem->getSelectedIndex();
+  int selectedIndex = lastSelectedIndex;
   std::string section = activem->getSection(selectedIndex);
   int sectionSize = activem->getSectionsSize();
   int iconSize = activem->getIconsSize();
   tft.setTextDatum(MC_DATUM);
   for (int i = 0; i < frames; i++) {
-    int dx = dir ? 128 / frames : -(128 / frames);
+    int dx = dir ? width / frames : -(width / frames);
     posX -= dx;
     tft.fillRect(0, startY, endX, endY - startY, TFT_BLACK);
     tft.setTextSize(3);
@@ -463,7 +475,7 @@ void display::renderWifiSelectScrollAnimation(bool dir, int frames) {
   tft.setTextFont(2);
 
   for (int i = 0; i < frames; i++) {
-    int dx = dir ? 128 / frames : -(128 / frames);
+    int dx = dir ? width / frames : -(width / frames);
     posX -= dx;
     tft.fillRect(0, startY, endX, endY - startY, TFT_BLACK);
     if (selectedIndex >= 0 && selectedIndex < sectionSize) {

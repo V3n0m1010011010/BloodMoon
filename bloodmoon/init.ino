@@ -1,7 +1,7 @@
 void initAll() {
   tft.init();
   Serial.begin(115200);
-  mySPI.begin(17, 16, 18, 33);
+  spi.begin(SCK_PIN, MISO_PIN, MOSI_PIN, CSN_PIN);
   nRF24.init();
   Wifi.init();
   ctr.init();

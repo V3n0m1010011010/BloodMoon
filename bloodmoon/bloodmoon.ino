@@ -13,11 +13,11 @@
 #include "rf24.h"
 #include "settings.h"
 #include "variables.h"
-SPIClass mySPI(VSPI);
-display dis(0, 22, 128, 112);
+SPIClass spi(VSPI);
+display dis(0, 22, width, height - 16);
 controls ctr(select, move);
 wifi Wifi;
-nrf24 nRF24(34, 33, 16000000);
+nrf24 nRF24(CE_PIN, CSN_PIN, 16000000);
 attack Attack;
 
 void setup() {

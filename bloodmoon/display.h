@@ -9,6 +9,8 @@ private:
   int posX;
   bool hasApSelectFirstRendered = false;
 public:
+  int lastSelectedIndex = 0;
+  bool scrollDirection;
   display(int startX, int startY, int endX, int endY);
   virtual void renderBoot();
 
