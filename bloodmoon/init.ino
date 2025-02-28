@@ -2,13 +2,11 @@ void initAll() {
   tft.init();
   Serial.begin(115200);
   spi.begin(SCK_PIN, MISO_PIN, MOSI_PIN, CSN_PIN);
+  ctr.init();
   nRF24.init();
   Wifi.init();
-  ctr.init();
   delay(200);
-  pinMode(10, OUTPUT);
-  // ledcSetup(pwmChannel, pwmFrequency, 8);
-  // ledcAttachPin(backlightPin, pwmChannel);
+  pinMode(backlightPin, OUTPUT);
   mainMenu();
   wifiMenu();
   wifiScanMenu();

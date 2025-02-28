@@ -4,8 +4,8 @@
 *            Choose the board by comment/uncomment
 ###################################################################*/
 
-#define LILYGO_T_QT_PRO
-//#define LILYGO_T_DISPLAY_S3_LCD
+//#define LILYGO_T_QT_PRO
+#define LILYGO_T_DISPLAY_S3_LCD
 
 //###################################################################
 
@@ -45,17 +45,12 @@
 
 
   ////  nRF24l01 modul SPI pins:
-  ////  uncomment for nrf24 support. define pins according to your setup
   
-  
-  #define USE_NRF24
-  #ifdef USE_NRF24
-    #define CE_PIN 34
-    #define SCK_PIN 17
-    #define MISO_PIN 16
-    #define MOSI_PIN 18
-    #define CSN_PIN 33
-  #endif
+  #define CE_PIN 34
+  #define SCK_PIN 17
+  #define MISO_PIN 16
+  #define MOSI_PIN 18
+  #define CSN_PIN 33
   
   //-------------------------
 
@@ -85,17 +80,12 @@
 
 
   ////  nRF24l01 modul SPI pins:
-  ////  uncomment for nrf24 support. define pins according to your setup
   
-  
-  //#define USE_NRF24
-  #ifdef USE_NRF24
-    #define CE_PIN 34
-    #define SCK_PIN 17
-    #define MISO_PIN 16
-    #define MOSI_PIN 18
-    #define CSN_PIN 33
-  #endif
+  #define CE_PIN -1
+  #define SCK_PIN -1
+  #define MISO_PIN -1
+  #define MOSI_PIN -1
+  #define CSN_PIN -1
   
   //-------------------------
 

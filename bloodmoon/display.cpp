@@ -30,6 +30,11 @@ display::display(int startX, int startY, int endX, int endY)
   ledcSetup(pwmChannel, pwmFrequency, 8);
   ledcAttachPin(backlightPin, pwmChannel);
   posX = width / 2;
+  #ifdef LILYGO_T_QT_PRO
+    tft.setRotation(0);
+  #elif defined(LILYGO_T_DISPLAY_S3_LCD)
+    tft.setRotation(0);
+  #endif
 }
 
 
@@ -41,15 +46,16 @@ display::display(int startX, int startY, int endX, int endY)
 //------------------------------------------------------------------------------------------------
 
 void display::renderBoot() {
-  for (int i = 0; i < 15; i++) {
-    int dy = -(height / 15) * i;
+  int bootFrames = (int)map(height, 128, 320, 15, 30);
+  for (int i = 0; i < bootFrames; i++) {
+    int dy = -(height / bootFrames) * i;
     tft.fillScreen(TFT_BLACK);
-    tft.drawBitmap(width / 4, height / 4 - 10 + dy, ghost, 64, 64, TFT_WHITE);
+    tft.drawBitmap(width / 2 - 32, height / 2 - 32 - 10 + dy, ghost, 64, 64, TFT_WHITE);
     tft.setTextDatum(MC_DATUM);
     tft.setTextSize(1);
     tft.setTextFont(2);
     tft.setTextColor(TFT_WHITE);
-    tft.drawString("BloodMoon", width / 2, 100 + dy);
+    tft.drawString("BloodMoon", width / 2, height / 2 + 40 + dy);
     tft.drawString("Firmware", width / 2, height / 2 - 20 + height + dy);
     tft.drawString("by", width / 2, height / 2 + height + dy);
     tft.drawString("V3n0m1010011010", width / 2, height / 2 + 20 + height + dy);
