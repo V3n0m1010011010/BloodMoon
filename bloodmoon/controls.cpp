@@ -23,25 +23,21 @@ bool controls::handleInput() {
     lastActivityTime = millis();
     unsigned long pressDuration = millis() - pressStartTime;
     dis.turn();
+    dis.isSelectRendering = false;
     if (displayNormal) {
       if (pressDuration < longPressDuration) {
         if (activem->isScroll()) {
-          // if (activem->isMenuWithIcon()) dis.renderIconScrollAnimation(true, 20);
-          if(activem->getSectionsSize() > 1 && activem->getType() == "apSelect") dis.renderWifiSelectScrollAnimation(true, 8);
           activem->setSelectedIndex((activem->getSelectedIndex() + 1) % activem->getSectionsSize());
           dis.scrollDirection = true;
           activem->setRenderState(true);
         }
       } else {
         if (activem->isScroll()) {
-          // if (activem->isMenuWithIcon()) dis.renderIconScrollAnimation(false, 20);
-          if(activem->getSectionsSize() > 1 && activem->getType() == "apSelect") dis.renderWifiSelectScrollAnimation(false, 8);
           activem->setSelectedIndex((activem->getSelectedIndex() - 1 + activem->getSectionsSize()) % activem->getSectionsSize());
           dis.scrollDirection = false;
           activem->setRenderState(true);
         }
       }
-      Serial.println(activem->getSelectedIndex());
     } else {
       dis.turnOn();
       displayNormal = true;
@@ -57,6 +53,7 @@ bool controls::handleInput() {
     inputDetected = true;
     lastActivityTime = millis();
     dis.turn();
+    dis.isSelectRendering = false;
     selWasPressed = false;
     if (displayNormal) {
       activem->executeAction(activem->getSelectedIndex());
@@ -66,6 +63,6 @@ bool controls::handleInput() {
     }
     dis.lastSelectedIndex = activem->getSelectedIndex();
   }
-  Serial.println(activem->getType());
+  // Serial.println(activem->getType());
   return inputDetected;
 }

@@ -4,8 +4,8 @@
 *            Choose the board by comment/uncomment
 ###################################################################*/
 
-//#define LILYGO_T_QT_PRO
-#define LILYGO_T_DISPLAY_S3_LCD
+#define LILYGO_T_QT_PRO
+//#define LILYGO_T_DISPLAY_S3_LCD
 
 //###################################################################
 
@@ -36,8 +36,8 @@
 
   ////  button pins:
 
-  #define move 47
-  #define select 0
+  #define move_btn 47
+  #define select_btn 0
 
   //// -----------------
 

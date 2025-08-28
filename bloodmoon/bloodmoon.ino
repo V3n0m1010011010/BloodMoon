@@ -6,19 +6,17 @@
 #include "Menu.h"
 #include "display.h"
 #include "controls.h"
-#include "wifi.h"
-#include "attack.h"
+#include "wifiApp.h"
 #include "menues.h"
 #include "globals.h"
-#include "rf24.h"
+#include "rf24App.h"
 #include "settings.h"
 #include "variables.h"
 SPIClass spi(VSPI);
 display dis(0, 22, width, height - 16);
-controls ctr(select, move);
+controls ctr(select_btn, move_btn);
 wifi Wifi;
 nrf24 nRF24(CE_PIN, CSN_PIN, 16000000);
-attack Attack;
 
 void setup() {
   initAll();

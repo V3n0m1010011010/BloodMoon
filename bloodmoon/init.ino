@@ -18,19 +18,26 @@ void initAll() {
   wifiGeneralSelectMenu();
   blueMenu();
   nrfMenu();
-  nrfJammerMenu();
+  if(nRF24.getInit())nrfJammerMenu();
   settMenu();
   mainm->setSubMenu(wifim);
+
   wifim->setSubMenu(wifiScanm);
+
   wifiScanm->setSubMenu(wifiScanApsm);
   wifiScanm->setSubMenu(wifiScanStsm);
-  wifim->setSubMenu(wifiAttackm);
-  wifiAttackm->setSubMenu(wifiAttackDeauthm);
+ 
   wifim->setSubMenu(wifiGeneralm);
   wifiGeneralm->setSubMenu(wifiGeneralSelectm);
+
+  wifim->setSubMenu(wifiAttackm);
+  wifiAttackm->setSubMenu(wifiAttackDeauthm);
+ 
   mainm->setSubMenu(bluem);
+ 
   mainm->setSubMenu(nrfm);
   nrfm->setSubMenu(nrfJammerm);
+ 
   mainm->setSubMenu(settm);
   dis.renderBoot();
   activem = mainm;
@@ -99,13 +106,13 @@ void wifiMenu() {
     activem->setSelectedIndex(0);
     activem->setRenderState(true);
   });
-  wifim->addSection("Attack", '\0', []() {
-    activem = wifiAttackm;
+  wifim->addSection("Gerneral", '\0', []() {
+    activem = wifiGeneralm;
     activem->setSelectedIndex(0);
     activem->setRenderState(true);
   });
-  wifim->addSection("Gerneral", '\0', []() {
-    activem = wifiGeneralm;
+  wifim->addSection("Attack", '\0', []() {
+    activem = wifiAttackm;
     activem->setSelectedIndex(0);
     activem->setRenderState(true);
   });
@@ -185,21 +192,24 @@ void wifiAttackMenu() {
 
 //###################################### deauth menu #####################################
 void wifiAttackDeauthMenu() {
-  wifiAttackm = new Menu("deauther", "Deauther", true);
-  wifiAttackm->addSection("Back", '\0', []() {
-    activem = wifiAttackm->getParentMenu();
+  wifiAttackDeauthm = new Menu("deauther", "Deauther", true);
+  wifiAttackDeauthm->addSection("Back", '\0', []() {
+    activem = wifiAttackDeauthm->getParentMenu();
     activem->setRenderState(true);
   });
-  wifiAttackm->addSection("Start", '\0', []() {
-    if (Attack.getMode(0) == true) {
-      activem->setTitle("Deauther");
-      activem->setSection("Start", 1);
-      activem->setRenderState(true);
-    } else {
+  wifiAttackDeauthm->addSection("Start", '\0', []() {
+    if (!Wifi.isDeauthing()) {
+      activem->setScroll(false);
       activem->setTitle("Deauthing");
       activem->setSection("Stop", 1);
       activem->setRenderState(true);
-      Attack.deauth();
+      Wifi.startDeauth();
+    } else {
+      activem->setScroll(true);
+      activem->setTitle("Deauther");
+      activem->setSection("Start", 1);
+      activem->setRenderState(true);
+      Wifi.stopDeauth();
     }
   });
 }
@@ -237,7 +247,7 @@ void wifiGeneralSelectMenu() {
     activem->setRenderState(true);
   });
   wifiGeneralSelectm->addSection("AccessPoints", '\0', []() {
-    wifiGeneralSelectApMenu();
+    wifiGeneralSelectApsMenu();
     activem = wifiGeneralSelectApm;
     activem->setSelectedIndex(0);
     activem->setRenderState(true);
@@ -253,18 +263,49 @@ void wifiGeneralSelectMenu() {
 
 
 //################################### wifi ap select ####################################
-void wifiGeneralSelectApMenu() {
-  wifiGeneralSelectApm = new Menu("apSelect", "AP's", true);
+void wifiGeneralSelectApsMenu() {
+  wifiGeneralSelectApm = new Menu("normal", "AP's", true);
   wifiGeneralSelectApm->addSection("Back", '\0', []() {
     activem = wifiGeneralSelectApm->getParentMenu();
+    dis.isSelectRendering = false;
     activem->setRenderState(true);
   });
   auto list = Wifi.getApList();
   Serial.println(list.size());
   for (int i = 0; i < list.size(); i++) {
-    wifiGeneralSelectApm->addSection(list[i].ssid.c_str(), '\0');
+    wifiGeneralSelectApm->addSection(list[i].ssid.c_str(), '\0', [i]{
+      wifiGeneralSelectApMenu(i);
+      activem = wifiGeneralSelectAp;
+      activem->setSelectedIndex(0);
+      activem->setRenderState(true);
+    });
   }
   wifiGeneralSelectm->setSubMenu(wifiGeneralSelectApm);
+}
+
+void wifiGeneralSelectApMenu(int i) {
+  dis.selectedAp = i;
+  wifiGeneralSelectAp = new Menu("apSelect", "Select", true);
+  wifiGeneralSelectAp->addSection("Back", '\0', []() {
+    activem = wifiGeneralSelectAp->getParentMenu();
+    activem->setRenderState(true);
+  });
+  
+  wifiGeneralSelectAp->addSection("info1", '\0');
+  wifiGeneralSelectAp->addSection("info2", '\0');
+  
+  wifiGeneralSelectAp->addSection("selDeauth", '\0', [i](){
+    auto ap = Wifi.getApList()[i];
+    Wifi.setApSelectings(i, 0, !ap.isDeauthSelected);
+    activem->setRenderState(true);
+  });
+  // wifiGeneralSelectAp->addSection("selBecClone", '\0', [i](){
+  //   auto ap = Wifi.getApList()[i];
+  //   Wifi.setApSelectings(i, 1, !ap.isBecCloneSelected);
+  //   activem->setRenderState(true);
+  // });
+
+  wifiGeneralSelectApm->setSubMenu(wifiGeneralSelectAp);
 }
 //#######################################################################################
 
@@ -274,6 +315,7 @@ void wifiGeneralSelectStMenu() {
   wifiGeneralSelectStm = new Menu("stSelect", "ST's", true);
   wifiGeneralSelectStm->addSection("Back", '\0', []() {
     activem = wifiGeneralSelectStm->getParentMenu();
+    dis.isSelectRendering = false;
     activem->setRenderState(true);
   });
   wifiGeneralSelectm->setSubMenu(wifiGeneralSelectStm);
@@ -330,19 +372,17 @@ void nrfMenu() {
   nrfm->addSection("Jammer", '\0', []() {
     activem = nrfJammerm;
     activem->setSelectedIndex(0);
-    dis.renderNRFJammer();
-    Attack.nRF24Jammer();
+    activem->setRenderState(true);
+    nRF24.startNRF24Jammer();
   });
 }
 void nrfJammerMenu() {
-  if (nRF24.getInit()) {
-    nrfJammerm = new Menu("jammer", "Jammer", false);
-    nrfJammerm->addSection("Back", '\0', []() {
-      activem = nrfJammerm->getParentMenu();
-      Attack.setMode(1, false);
-      activem->setRenderState(true);
-    });
-  }
+  nrfJammerm = new Menu("jammer", "Jammer", false);
+  nrfJammerm->addSection("Back", '\0', []() {
+    activem = nrfJammerm->getParentMenu();
+    nRF24.stopNRF24Jammer();
+    activem->setRenderState(true);
+  });
 }
 
 //###############################################################################################

@@ -80,7 +80,7 @@ int Menu::getIconsSize(){
   return icons.size();
 }
 void Menu::executeAction(int i) {
-  actions[i]();
+  if(actions[i] != nullptr)actions[i]();
 }
 void Menu::setScroll(bool scroll) {
   isScrollable = scroll;

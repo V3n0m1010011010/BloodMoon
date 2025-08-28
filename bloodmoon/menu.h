@@ -25,6 +25,7 @@ private:
   bool needsRender = false;
 
 public:
+
   Menu(String type, const std::string& title, bool isScrollable, std::function<void()> aDown = nullptr, std::function<void()> aUp = nullptr, bool menuWithIcon = false);
 
   void addSection(const std::string& section, char icon, std::function<void()> action = nullptr);
