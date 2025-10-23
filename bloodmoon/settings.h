@@ -4,8 +4,8 @@
 *            Choose the board by comment/uncomment
 ###################################################################*/
 
-#define LILYGO_T_QT_PRO
-//#define LILYGO_T_DISPLAY_S3_LCD
+//#define LILYGO_T_QT_PRO
+#define LILYGO_T_DISPLAY_S3_LCD
 
 //###################################################################
 
@@ -54,6 +54,17 @@
   
   //-------------------------
 
+  ////  micro sd card modul defines:
+
+  #define sd_SCK_PIN -1
+  #define sd_MISO_PIN -1
+  #define sd_MOSI_PIN -1
+  #define sd_CS_PIN -1
+  
+  #define PCAP_PATH "/handshake_once.pcap"
+  
+  //-------------------------
+
   #define backlightPin 10
 
 #endif
@@ -71,8 +82,8 @@
 
   ////  button pins:
 
-  #define move 14
-  #define select 0
+  #define move_btn 14
+  #define select_btn 0
 
   //// -----------------
 
@@ -81,11 +92,20 @@
 
   ////  nRF24l01 modul SPI pins:
   
-  #define CE_PIN -1
-  #define SCK_PIN -1
-  #define MISO_PIN -1
-  #define MOSI_PIN -1
-  #define CSN_PIN -1
+  #define CE_PIN 1
+  #define SCK_PIN 12
+  #define MISO_PIN 13
+  #define MOSI_PIN 11
+  #define CSN_PIN 2
+
+  ////  micro sd card modul defines:
+
+  #define sd_SCK_PIN 12
+  #define sd_MISO_PIN 13
+  #define sd_MOSI_PIN 11
+  #define sd_CS_PIN 10
+
+  #define PCAP_PATH "/handshake_once.pcap"
   
   //-------------------------
 

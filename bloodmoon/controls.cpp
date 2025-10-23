@@ -1,50 +1,56 @@
 #include <EasyButton.h>
-#include "controls.h"
-#include "menu.h"
-#include "display.h"
-#include "variables.h"
-extern Menu* activem;
-extern display dis;
+#include "globals.h"
+
 controls::controls(int sel, int mov)
   : mov(mov), sel(sel) {}
+
+
 void controls::init() {
   mov.begin();
   sel.begin();
 }
+
+
 bool controls::handleInput() {
   bool inputDetected = false;
+  
   mov.read();
-  if (mov.isPressed() && pressStartTime == 0) {
-    pressStartTime = millis();
-    movWasPressed = true;
-  }
-  if (mov.isReleased() && movWasPressed) {
+
+  mov.onPressed([&]() {
     inputDetected = true;
     lastActivityTime = millis();
-    unsigned long pressDuration = millis() - pressStartTime;
     dis.turn();
     dis.isSelectRendering = false;
     if (displayNormal) {
-      if (pressDuration < longPressDuration) {
-        if (activem->isScroll()) {
-          activem->setSelectedIndex((activem->getSelectedIndex() + 1) % activem->getSectionsSize());
-          dis.scrollDirection = true;
-          activem->setRenderState(true);
-        }
-      } else {
-        if (activem->isScroll()) {
-          activem->setSelectedIndex((activem->getSelectedIndex() - 1 + activem->getSectionsSize()) % activem->getSectionsSize());
-          dis.scrollDirection = false;
-          activem->setRenderState(true);
-        }
+      if (menu.isScroll()) {
+        menu.setSelectedIndex((menu.getSelectedIndex() + 1) % menu.getSectionCount());
+        dis.scrollDirection = true;
+        menu.setRenderState(true);
       }
     } else {
       dis.turnOn();
       displayNormal = true;
     }
-    pressStartTime = 0;
-    movWasPressed = false;
-  }
+  });
+
+  mov.onPressedFor(longPressDuration, [&]() {
+    inputDetected = true;
+    lastActivityTime = millis();
+    dis.turn();
+    dis.isSelectRendering = false;
+    if (displayNormal) {
+      if (menu.isScroll()) {
+        menu.setSelectedIndex((menu.getSelectedIndex() - 1 + menu.getSectionCount()) % menu.getSectionCount());
+        dis.scrollDirection = false;
+        menu.setRenderState(true);
+      }
+    } else {
+      dis.turnOn();
+      displayNormal = true;
+    }
+  });
+
+
   sel.read();
   if (sel.wasPressed()) {
     selWasPressed = true;
@@ -56,13 +62,12 @@ bool controls::handleInput() {
     dis.isSelectRendering = false;
     selWasPressed = false;
     if (displayNormal) {
-      activem->executeAction(activem->getSelectedIndex());
+      menu.executeAction(menu.getSelectedIndex());
     } else {
       dis.turnOn();
       displayNormal = true;
     }
-    dis.lastSelectedIndex = activem->getSelectedIndex();
+    dis.lastSelectedIndex = menu.getSelectedIndex();
   }
-  // Serial.println(activem->getType());
   return inputDetected;
 }

@@ -1,3 +1,4 @@
+#pragma once
 #include <TFT_eSPI.h>
 #include <map>
 extern TFT_eSPI tft;
@@ -19,6 +20,8 @@ private:
   unsigned int endX;
   unsigned int endY;
   int posX;
+
+  bool renderOnce = false;
 
   bool hasApSelectFirstRendered = false;
 

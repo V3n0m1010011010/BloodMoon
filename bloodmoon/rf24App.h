@@ -1,8 +1,10 @@
+#pragma once
 #include <RF24.h>
 #include <nRF24L01.h>
 #include <algorithm>
 #include <vector>
 #include <string>
+
 class nrf24 {
 private:
   static nrf24* instance;

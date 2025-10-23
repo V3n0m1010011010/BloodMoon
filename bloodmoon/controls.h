@@ -1,3 +1,4 @@
+#pragma once
 #include <EasyButton.h>
 class controls {
 private:
