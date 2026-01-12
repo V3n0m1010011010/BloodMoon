@@ -1,0 +1,8 @@
+<screen>
+	<styles>
+		<style name="style_main" bg_color="0x000000" />
+	</styles>
+	<view>
+		<style name="style_main" />
+	</view>
+</screen>
